@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { DateTime } from "luxon";
-import { fillTemplate, findEmergency, isInServiceArea } from "../../core/rules";
-import type { EventLog } from "../../core/events";
-import type { Messaging } from "../../core/messaging";
-import type { CallRecord, Store } from "../../core/store";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import { SlotTakenError, type CalendarAdapter } from "../../integrations/calendar/local-calendar";
+import { fillTemplate, findEmergency, isInServiceArea } from "../../core/rules/index.js";
+import type { EventLog } from "../../core/events/index.js";
+import type { Messaging } from "../../core/messaging/index.js";
+import type { CallRecord, Store } from "../../core/store/index.js";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import { SlotTakenError, type CalendarAdapter } from "../../integrations/calendar/local-calendar.js";
 
 export interface Deps {
   store: Store;

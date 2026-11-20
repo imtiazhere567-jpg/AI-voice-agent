@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { EventLog } from "../events";
-import type { Store } from "../store";
-import type { TenantConfig } from "../tenant-config/schema";
+import type { EventLog } from "../events/index.js";
+import type { Store } from "../store/index.js";
+import type { TenantConfig } from "../tenant-config/schema.js";
 
 export interface SmsProvider {
   sendSms(fromNumber: string, toNumber: string, message: string): Promise<void>;

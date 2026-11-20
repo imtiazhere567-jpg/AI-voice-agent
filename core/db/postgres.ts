@@ -222,3 +222,21 @@ export async function countTenantConfigs(sql: Sql): Promise<number> {
   const { rows } = await sql.query(`select count(*)::int as n from app_tenants`);
   return Number(rows[0]?.n ?? 0);
 }
+
+// ---------- Change check (for hosts like Vercel that run several copies of the app) ----------
+
+/** A short fingerprint of the database. If it changed, another copy of the app saved something. */
+export async function dbVersion(sql: Sql): Promise<string> {
+  const { rows } = await sql.query(
+    `select (select count(*) from app_records)::text || '/' || coalesce((select max(updated_at)::text from app_records), '')
+       || '/' || (select count(*) from app_events)::text
+       || '/' || (select count(*) from app_tenants where deleted_at is null)::text || '/' || coalesce((select max(updated_at)::text from app_tenants), '') as v`,
+  );
+  return String(rows[0]?.v ?? "");
+}
+
+/** Log entries from this time on (used to pick up entries written by other copies of the app). */
+export async function loadEventsSince(sql: Sql, at: string): Promise<EventRow[]> {
+  const { rows } = await sql.query(`select id, tenant_id, type, actor, at, payload from app_events where at >= $1 order by at, id`, [at]);
+  return rows.map((r) => ({ id: r.id, tenantId: r.tenant_id, type: r.type, actor: r.actor, at: r.at, payload: typeof r.payload === "string" ? JSON.parse(r.payload) : r.payload }));
+}

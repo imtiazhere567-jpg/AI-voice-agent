@@ -1,9 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { DateTime } from "luxon";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import * as actions from "./actions";
-import type { Deps } from "./actions";
-import { buildFirstSentence, buildReceptionistPrompt } from "./prompt-builder";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import * as actions from "./actions.js";
+import type { Deps } from "./actions.js";
+import { buildFirstSentence, buildReceptionistPrompt } from "./prompt-builder.js";
 
 /**
  * Real AI conversation (Claude) for the phone simulator.

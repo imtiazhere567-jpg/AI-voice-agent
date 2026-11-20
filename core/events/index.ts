@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-import { EventSync, loadEvents, type Sql } from "../db/postgres";
+import { EventSync, loadEvents, type Sql } from "../db/postgres.js";
 
 export type Actor = "ai" | "system" | "user";
 
@@ -42,6 +42,20 @@ export class EventLog {
     const imported = !saved.length && log.records.length > 0;
     if (imported) { log.db.add(...log.records); await log.db.flush(); }
     return { events: log, imported };
+  }
+
+  /** Add entries that another copy of the app saved (skips ones we already have). */
+  addLoaded(rows: readonly EventRecord[]): number {
+    const have = new Set(this.records.map((r) => r.id));
+    const add = rows.filter((r) => !have.has(r.id));
+    this.records.push(...add);
+    if (add.length) this.records.sort((x, y) => (x.at < y.at ? -1 : x.at > y.at ? 1 : 0));
+    return add.length;
+  }
+
+  /** Time of the newest entry in memory. */
+  latestAt(): string {
+    return this.records.reduce((m, r) => (r.at > m ? r.at : m), "");
   }
 
   async flush(): Promise<void> {

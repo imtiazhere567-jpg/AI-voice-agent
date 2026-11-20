@@ -1,21 +1,21 @@
 import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { isInServiceArea, isOpenAt } from "./core/rules";
-import { buildAutomaticPrompt, buildReceptionistPrompt } from "./modules/voice-receptionist/prompt-builder";
+import { isInServiceArea, isOpenAt } from "./core/rules/index.js";
+import { buildAutomaticPrompt, buildReceptionistPrompt } from "./modules/voice-receptionist/prompt-builder.js";
 import Fastify, { type FastifyRequest } from "fastify";
-import type { TenantConfig } from "./core/tenant-config/schema";
-import * as actions from "./modules/voice-receptionist/actions";
-import type { Deps } from "./modules/voice-receptionist/actions";
-import { LiveCalls } from "./modules/voice-receptionist/live-calls";
-import { parseTenant } from "./core/tenant-config/loader";
+import type { TenantConfig } from "./core/tenant-config/schema.js";
+import * as actions from "./modules/voice-receptionist/actions.js";
+import type { Deps } from "./modules/voice-receptionist/actions.js";
+import { LiveCalls } from "./modules/voice-receptionist/live-calls.js";
+import { parseTenant } from "./core/tenant-config/loader.js";
 import { existsSync, mkdirSync, renameSync, writeFileSync } from "node:fs";
-import { deleteTenantConfig, saveTenantConfig, type Sql } from "./core/db/postgres";
-import { brainKind } from "./modules/voice-receptionist/claude-code-brain";
+import { deleteTenantConfig, saveTenantConfig, type Sql } from "./core/db/postgres.js";
+import { brainKind } from "./modules/voice-receptionist/claude-code-brain.js";
 import { join } from "node:path";
-import { buildBlandTestCall, buildBlandWebAgent, pickerVoices, type BlandClient } from "./integrations/voice/bland";
-import type { QuickTunnel } from "./integrations/tunnel";
-import { Auth, normEmail, passwordProblem, validEmail, type User } from "./core/auth";
+import { buildBlandTestCall, buildBlandWebAgent, pickerVoices, type BlandClient } from "./integrations/voice/bland.js";
+import type { QuickTunnel } from "./integrations/tunnel.js";
+import { Auth, normEmail, passwordProblem, validEmail, type User } from "./core/auth/index.js";
 
 function safeEqual(a: string | undefined, b: string): boolean {
   if (!a) return false;
@@ -28,7 +28,7 @@ type Body = Record<string, unknown>;
 type Req = FastifyRequest<{ Params: { tenantId: string }; Body: Body; Querystring: { token?: string } }>;
 
 /** Builds the HTTP server. Kept separate from startup so tests can call it directly. */
-export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>; toolSecret: string; logger?: boolean; tenantsDir?: string; tenantDb?: Sql; requireAuth?: boolean; bland?: BlandClient; tunnel?: QuickTunnel }) {
+export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>; toolSecret: string; logger?: boolean; tenantsDir?: string; tenantDb?: Sql; liveSync?: { beforeRequest(): Promise<void>; afterRequest(): Promise<void> }; requireAuth?: boolean; bland?: BlandClient; tunnel?: QuickTunnel }) {
   const { deps, tenants, toolSecret } = opts;
   const requireAuth = opts.requireAuth !== false;
   const auth = new Auth(deps.store, deps.now);
@@ -45,6 +45,19 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
             serializers: { req: (r) => ({ method: r.method, url: String(r.url).replace(/token=[^&]+/, "token=[hidden]") }) },
           },
   });
+
+  // Hosts like Vercel: load changes saved by other copies of the app before each request,
+  // and finish saving before each reply (the copy may be paused right after it).
+  const sync = opts.liveSync;
+  if (sync) {
+    const open = new WeakSet<object>();
+    app.addHook("onRequest", async (req) => { open.add(req); await sync.beforeRequest(); });
+    app.addHook("onSend", async (req, _reply, payload) => {
+      if (open.delete(req)) await sync.afterRequest();
+      return payload;
+    });
+    app.addHook("onResponse", async (req) => { if (open.delete(req)) await sync.afterRequest(); });
+  }
 
   /** Find the business, and reject callers that don't know the secret. */
   function guard(req: Req, secret: string | undefined): TenantConfig | { error: string; code: number } {
@@ -289,7 +302,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
     return [...tenants.values()].filter((t) => u && auth.canAccess(u, t.tenantId));
   };
 
-  const page = (name: string) => readFileSync(fileURLToPath(new URL(`./public/${name}`, import.meta.url)), "utf8");
+  const page = (name: string) => readFileSync(fileURLToPath(new URL(`./web/${name}`, import.meta.url)), "utf8");
   app.get("/", async (req, reply) => {
     if (!userOf(req)) return reply.redirect("/login");
     return reply.type("text/html").header("cache-control", "no-store").send(page("dashboard.html")); // always load the newest version
@@ -661,7 +674,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
   const view = (c: ReturnType<LiveCalls["get"]>) => c && { ...c, secondsLeft: c.status === "ringing" ? Math.max(0, c.ringSeconds - (deps.now().getTime() - Date.parse(c.startedAt)) / 1000) : 0 };
 
   app.get("/phone", async (_req, reply) => {
-    const html = readFileSync(fileURLToPath(new URL("./public/phone.html", import.meta.url)), "utf8");
+    const html = readFileSync(fileURLToPath(new URL("./web/phone.html", import.meta.url)), "utf8");
     return reply.type("text/html").header("cache-control", "no-store").send(html); // always load the newest version
   });
   app.post("/api/live/:tenantId/start", async (req: LiveReq, reply) => {
@@ -713,7 +726,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
 
   app.get("/book/:tenantId", async (req: PubReq, reply) => {
     if (!tenants.has(req.params.tenantId)) return reply.code(404).type("text/html").send("<h1>Business not found</h1>");
-    const html = readFileSync(fileURLToPath(new URL("./public/booking.html", import.meta.url)), "utf8");
+    const html = readFileSync(fileURLToPath(new URL("./web/booking.html", import.meta.url)), "utf8");
     return reply.type("text/html").header("cache-control", "no-store").send(html); // always load the newest version
   });
 

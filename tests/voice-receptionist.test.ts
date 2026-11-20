@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { findEmergency, isInServiceArea, isOpenAt } from "../core/rules";
-import { loadTenantsFromDir, parseTenant } from "../core/tenant-config/loader";
-import { buildFirstSentence, buildReceptionistPrompt } from "../modules/voice-receptionist/prompt-builder";
+import { findEmergency, isInServiceArea, isOpenAt } from "../core/rules/index.js";
+import { loadTenantsFromDir, parseTenant } from "../core/tenant-config/loader.js";
+import { buildFirstSentence, buildReceptionistPrompt } from "../modules/voice-receptionist/prompt-builder.js";
 
 const tenants = loadTenantsFromDir(fileURLToPath(new URL("../test-data/tenants", import.meta.url)));
 const roofing = tenants.get("demo-roofing")!;

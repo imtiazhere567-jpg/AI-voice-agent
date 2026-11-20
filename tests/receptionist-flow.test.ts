@@ -1,13 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app";
-import { EventLog, redact } from "../core/events";
-import { Messaging, type SmsProvider } from "../core/messaging";
-import { Store } from "../core/store";
-import { loadTenantsFromDir } from "../core/tenant-config/loader";
-import { LocalCalendar } from "../integrations/calendar/local-calendar";
-import { buildBlandInboundConfig, buildBlandTestCall, type BlandClient } from "../integrations/voice/bland";
-import * as a from "../modules/voice-receptionist/actions";
+import { buildApp } from "../app.js";
+import { EventLog, redact } from "../core/events/index.js";
+import { Messaging, type SmsProvider } from "../core/messaging/index.js";
+import { Store } from "../core/store/index.js";
+import { loadTenantsFromDir } from "../core/tenant-config/loader.js";
+import { LocalCalendar } from "../integrations/calendar/local-calendar.js";
+import { buildBlandInboundConfig, buildBlandTestCall, type BlandClient } from "../integrations/voice/bland.js";
+import * as a from "../modules/voice-receptionist/actions.js";
 
 const tenants = loadTenantsFromDir(fileURLToPath(new URL("../test-data/tenants", import.meta.url)));
 const roofing = tenants.get("demo-roofing")!;
@@ -341,7 +341,7 @@ describe("booking link safety", () => {
 
 describe("service area answers", () => {
   it("the AI's instructions list the ZIP codes the business serves (from the tenant config)", async () => {
-    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder");
+    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder.js");
     const p = buildReceptionistPrompt(roofing);
     expect(p).toContain(`We serve these ZIP codes: ${roofing.serviceArea.zipCodes.join(", ")}`);
     expect(p).toMatch(/Do NOT check their old ZIP code again/);
@@ -358,7 +358,7 @@ describe("service area answers", () => {
 
 describe("answering questions", () => {
   it("lets the AI answer general trade questions, and hand off only what it truly can't answer", async () => {
-    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder");
+    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder.js");
     const p = buildReceptionistPrompt(roofing);
     expect(p).not.toMatch(/Answer questions ONLY from the approved answers/);
     expect(p).toMatch(/General roofing questions/);
@@ -370,7 +370,7 @@ describe("answering questions", () => {
 
 describe("owner-edited AI script", () => {
   it("uses the owner's edited script, always followed by the safety rules", async () => {
-    const { buildReceptionistPrompt, buildAutomaticPrompt } = await import("../modules/voice-receptionist/prompt-builder");
+    const { buildReceptionistPrompt, buildAutomaticPrompt } = await import("../modules/voice-receptionist/prompt-builder.js");
     const edited = { ...roofing, scriptOverride: "You are the friendly receptionist for Demo Roofing. Keep it short." };
     const p = buildReceptionistPrompt(edited);
     expect(p.startsWith("You are the friendly receptionist for Demo Roofing.")).toBe(true);
@@ -391,7 +391,7 @@ describe("owner-edited AI script", () => {
 
 describe("script completeness (things the AI needs on real Bland calls)", () => {
   it("includes opening hours from the settings, with closed days", async () => {
-    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder");
+    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder.js");
     const p = buildReceptionistPrompt(roofing);
     expect(p).toContain("- Monday: 7 AM to 6 PM");
     expect(p).toContain("- Saturday: 8 AM to 12 PM");
@@ -400,7 +400,7 @@ describe("script completeness (things the AI needs on real Bland calls)", () => 
   });
 
   it("covers phone read-back, urgency, existing customers, spoken style, safety, and doesn't repeat the opening", async () => {
-    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder");
+    const { buildReceptionistPrompt } = await import("../modules/voice-receptionist/prompt-builder.js");
     const p = buildReceptionistPrompt(roofing);
     expect(p).toMatch(/Read the phone number back digit by digit/);
     expect(p).toMatch(/Is this urgent, or can it wait/);
@@ -424,7 +424,7 @@ describe("script completeness (things the AI needs on real Bland calls)", () => 
 
 describe("voice picker", () => {
   it("keeps usable English voices, Bland's curated first, then best rated, and works out male/female", async () => {
-    const { pickerVoices } = await import("../integrations/voice/bland");
+    const { pickerVoices } = await import("../integrations/voice/bland.js");
     const list = pickerVoices([
       { id: "1", name: "josh", description: "Articulate American Male", public: true, is_live: true, tags: ["english"], ratings: 50 },
       { id: "2", name: "June", description: "American Female.", public: true, is_live: true, tags: ["english", "Bland Curated"], total_ratings: 45 },
@@ -483,7 +483,7 @@ describe("voice list when the internet drops", () => {
 describe("voice sample for older Bland voices", () => {
   it("falls back to Bland's older sample service when the new one refuses an older voice", async () => {
     const { vi } = await import("vitest");
-    const { BlandClient } = await import("../integrations/voice/bland");
+    const { BlandClient } = await import("../integrations/voice/bland.js");
     const urls: string[] = [];
     const spy = vi.spyOn(globalThis, "fetch").mockImplementation(async (u) => {
       urls.push(String(u));

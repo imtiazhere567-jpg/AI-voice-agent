@@ -1,10 +1,10 @@
 import { DateTime } from "luxon";
-import { findEmergency, isInServiceArea } from "../../core/rules";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import type { Slot } from "../../integrations/calendar/local-calendar";
-import * as actions from "./actions";
-import type { Deps } from "./actions";
-import { buildFirstSentence } from "./prompt-builder";
+import { findEmergency, isInServiceArea } from "../../core/rules/index.js";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import type { Slot } from "../../integrations/calendar/local-calendar.js";
+import * as actions from "./actions.js";
+import type { Deps } from "./actions.js";
+import { buildFirstSentence } from "./prompt-builder.js";
 
 /**
  * Conversation engine for the phone SIMULATOR (and as a fallback).

@@ -1,6 +1,6 @@
-import type { SmsProvider } from "../../core/messaging";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import { buildFirstSentence, buildReceptionistPrompt } from "../../modules/voice-receptionist/prompt-builder";
+import type { SmsProvider } from "../../core/messaging/index.js";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import { buildFirstSentence, buildReceptionistPrompt } from "../../modules/voice-receptionist/prompt-builder.js";
 
 const BLAND_API = "https://api.bland.ai";
 

@@ -1,11 +1,11 @@
 // Debug helper: talks to the local Claude Code brain directly and prints every step with timing.
 // Run: npx tsx scripts/debug-claude-code.ts
-import { ClaudeCodeConversation } from "../modules/voice-receptionist/claude-code-brain";
-import { EventLog } from "../core/events";
-import { Store } from "../core/store";
-import { Messaging } from "../core/messaging";
-import { loadTenantsFromDir } from "../core/tenant-config/loader";
-import { LocalCalendar } from "../integrations/calendar/local-calendar";
+import { ClaudeCodeConversation } from "../modules/voice-receptionist/claude-code-brain.js";
+import { EventLog } from "../core/events/index.js";
+import { Store } from "../core/store/index.js";
+import { Messaging } from "../core/messaging/index.js";
+import { loadTenantsFromDir } from "../core/tenant-config/loader.js";
+import { LocalCalendar } from "../integrations/calendar/local-calendar.js";
 
 process.env.CLAUDE_CODE_DEBUG = "1";
 const tenant = loadTenantsFromDir("test-data/tenants").get("demo-roofing")!;

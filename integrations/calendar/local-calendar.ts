@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { DateTime } from "luxon";
-import type { Booking, Store } from "../../core/store";
-import type { TenantConfig, Weekday } from "../../core/tenant-config/schema";
+import type { Booking, Store } from "../../core/store/index.js";
+import type { TenantConfig, Weekday } from "../../core/tenant-config/schema.js";
 
 export interface Slot {
   start: string; // ISO with offset

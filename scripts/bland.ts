@@ -2,8 +2,8 @@
 //   npm run bland -- status                         check key + list your numbers
 //   npm run bland -- preview <tenantId>             show the config that would be sent (no changes)
 //   npm run bland -- connect <tenantId> <+1number>  point a Bland number at this business's receptionist
-import { loadTenantsFromDir } from "../core/tenant-config/loader";
-import { BlandClient, buildBlandInboundConfig } from "../integrations/voice/bland";
+import { loadTenantsFromDir } from "../core/tenant-config/loader.js";
+import { BlandClient, buildBlandInboundConfig } from "../integrations/voice/bland.js";
 
 try {
   process.loadEnvFile(".env");

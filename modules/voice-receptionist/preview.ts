@@ -1,7 +1,7 @@
 // Usage: npm run preview-prompt -- demo-roofing
 import { fileURLToPath } from "node:url";
-import { loadTenantsFromDir } from "../../core/tenant-config/loader";
-import { buildReceptionistPrompt } from "./prompt-builder";
+import { loadTenantsFromDir } from "../../core/tenant-config/loader.js";
+import { buildReceptionistPrompt } from "./prompt-builder.js";
 
 const tenants = loadTenantsFromDir(fileURLToPath(new URL("../../test-data/tenants", import.meta.url)));
 const id = process.argv[2];

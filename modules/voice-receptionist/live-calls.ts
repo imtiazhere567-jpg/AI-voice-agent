@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import * as actions from "./actions";
-import type { Deps } from "./actions";
-import { greeting, handle, newDialog, summarize, type DialogState } from "./dialog";
-import { AIConversation } from "./ai-brain";
-import { ClaudeCodeConversation, brainKind, prewarmClaudeCode } from "./claude-code-brain";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import * as actions from "./actions.js";
+import type { Deps } from "./actions.js";
+import { greeting, handle, newDialog, summarize, type DialogState } from "./dialog.js";
+import { AIConversation } from "./ai-brain.js";
+import { ClaudeCodeConversation, brainKind, prewarmClaudeCode } from "./claude-code-brain.js";
 
 /**
  * Live calls for the phone simulator.

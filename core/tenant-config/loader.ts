@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { tenantSchema, type TenantConfig } from "./schema";
-import { countTenantConfigs, loadTenantConfigs, saveTenantConfig, type Sql } from "../db/postgres";
+import { tenantSchema, type TenantConfig } from "./schema.js";
+import { countTenantConfigs, loadTenantConfigs, saveTenantConfig, type Sql } from "../db/postgres.js";
 
 /** Parse and validate one tenant config. Throws a readable error if invalid. */
 export function parseTenant(raw: unknown, source = "config"): TenantConfig {

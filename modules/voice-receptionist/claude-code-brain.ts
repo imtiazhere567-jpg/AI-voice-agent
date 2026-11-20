@@ -2,10 +2,10 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { delimiter, join } from "node:path";
-import type { TenantConfig } from "../../core/tenant-config/schema";
-import type { Deps } from "./actions";
-import { AIConversation, TOOLS, claudeAvailable, phoneCallRules, type BrainTurn } from "./ai-brain";
-import { buildFirstSentence, buildReceptionistPrompt } from "./prompt-builder";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
+import type { Deps } from "./actions.js";
+import { AIConversation, TOOLS, claudeAvailable, phoneCallRules, type BrainTurn } from "./ai-brain.js";
+import { buildFirstSentence, buildReceptionistPrompt } from "./prompt-builder.js";
 
 /**
  * LOCAL TESTING ONLY: the phone simulator talks through the Claude Code program installed

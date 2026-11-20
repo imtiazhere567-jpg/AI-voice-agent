@@ -1,4 +1,4 @@
-import type { TenantConfig, Weekday } from "../tenant-config/schema";
+import type { TenantConfig, Weekday } from "../tenant-config/schema.js";
 
 /** Deterministic business rules. No AI here. */
 

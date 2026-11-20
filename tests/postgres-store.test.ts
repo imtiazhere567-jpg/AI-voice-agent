@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it } from "vitest";
-import { createTables, RecordSync, type Sql } from "../core/db/postgres";
-import { Store } from "../core/store";
-import { EventLog } from "../core/events";
-import { loadTenantsFromDb } from "../core/tenant-config/loader";
-import { buildApp } from "../app";
+import { createTables, RecordSync, type Sql } from "../core/db/postgres.js";
+import { Store } from "../core/store/index.js";
+import { EventLog } from "../core/events/index.js";
+import { loadTenantsFromDb } from "../core/tenant-config/loader.js";
+import { buildApp } from "../app.js";
 
 async function freshDb(): Promise<Sql> {
   const db = new PGlite();
@@ -123,5 +123,39 @@ describe("Postgres storage", () => {
       expect(del.statusCode).toBe(200);
       expect((await loadTenantsFromDb(db)).tenants.has("demo-roofing")).toBe(false);
     }
+  });
+});
+
+describe("Two copies of the app on one database (Vercel)", () => {
+  it("each copy sees what the other one saved, and saves before replying", async () => {
+    const { LiveSync } = await import("../core/db/live-sync.js");
+    const db = await freshDb();
+    const { tenants: tA } = await loadTenantsFromDb(db, "test-data/tenants");
+    const { tenants: tB } = await loadTenantsFromDb(db);
+    const a = { store: (await Store.openPostgres(db)).store, events: (await EventLog.openPostgres(db)).events };
+    const b = { store: (await Store.openPostgres(db)).store, events: (await EventLog.openPostgres(db)).events };
+    const syncA = new LiveSync(db, a.store, a.events, tA);
+    const syncB = new LiveSync(db, b.store, b.events, tB);
+    await syncA.start(); await syncB.start();
+    const mk = (store: Store, events: EventLog, tenants: typeof tA, sync: InstanceType<typeof LiveSync>) => buildApp({
+      deps: { store, events, messaging: {} as any, calendar: {} as any, now: () => new Date(), publicBaseUrl: "http://x" },
+      tenants, toolSecret: "test-secret-1234567890", tenantDb: db, liveSync: sync, requireAuth: false, logger: false,
+    });
+    const appA = mk(a.store, a.events, tA, syncA);
+    const appB = mk(b.store, b.events, tB, syncB);
+
+    // Copy A changes the training; copy B shows it on its next request.
+    const cur = tA.get("demo-roofing")!;
+    expect((await appA.inject({ method: "PUT", url: "/api/tenants/demo-roofing", payload: { ...cur, customInstructions: "Mention the spring offer." } })).statusCode).toBe(200);
+    const script = await appB.inject({ url: "/api/tenants/demo-roofing/script" });
+    expect(script.json().script).toContain("Mention the spring offer.");
+    expect(b.events.list("demo-roofing", "training.updated")).toHaveLength(1);
+
+    // A booking saved by copy A (outside a request, like a Bland tool call) is seen by copy B.
+    a.store.data.bookings.push(booking("b1", "Sara") as any);
+    a.store.persist();
+    await a.store.flush();
+    await appB.inject({ url: "/health" });
+    expect(b.store.data.bookings.map((x) => x.customerName)).toEqual(["Sara"]);
   });
 });

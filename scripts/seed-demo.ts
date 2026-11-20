@@ -5,10 +5,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { Store, type Booking, type CallRecord, type CallbackTask } from "../core/store";
-import type { EventRecord } from "../core/events";
-import { loadTenantsFromDir } from "../core/tenant-config/loader";
-import { LocalCalendar } from "../integrations/calendar/local-calendar";
+import { Store, type Booking, type CallRecord, type CallbackTask } from "../core/store/index.js";
+import type { EventRecord } from "../core/events/index.js";
+import { loadTenantsFromDir } from "../core/tenant-config/loader.js";
+import { LocalCalendar } from "../integrations/calendar/local-calendar.js";
 
 try { process.loadEnvFile(".env"); } catch {}
 const dataDir = process.env.DATA_DIR || "data";

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import type { Session, User } from "../auth";
-import { loadRecords, RecordSync, type Sql } from "../db/postgres";
+import type { Session, User } from "../auth/index.js";
+import { loadRecords, RecordSync, type Sql } from "../db/postgres.js";
 
 /**
  * Storage: Postgres when DATABASE_URL is set (live), otherwise one JSON file (or memory only in tests).
@@ -118,6 +118,13 @@ export class Store {
     if (!this.file) return;
     mkdirSync(dirname(this.file), { recursive: true });
     writeFileSync(this.file, JSON.stringify(this.data, null, 2));
+  }
+
+  /** Replace everything in memory with what was loaded from the database. */
+  replaceAll(saved: Partial<Data>): void {
+    const fresh = { ...empty(), ...saved } as Data;
+    for (const k of Object.keys(fresh) as (keyof Data)[]) (this.data as any)[k] = fresh[k];
+    this.db?.markSaved(this.data as unknown as Record<string, unknown>);
   }
 
   /** Wait until every change is saved (used before the server stops). */

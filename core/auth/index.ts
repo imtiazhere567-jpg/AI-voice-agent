@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
-import type { Store } from "../store";
+import type { Store } from "../store/index.js";
 
 /**
  * Accounts for the owner dashboard.

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { fillTemplate } from "../../core/rules";
-import type { TenantConfig } from "../../core/tenant-config/schema";
+import { fillTemplate } from "../../core/rules/index.js";
+import type { TenantConfig } from "../../core/tenant-config/schema.js";
 
 export const PROMPT_VERSION = "voice-receptionist/v1";
 
