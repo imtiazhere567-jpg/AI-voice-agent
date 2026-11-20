@@ -5,13 +5,15 @@
   "type": "module",
   "description": "Multi-business AI automation modules. Module 1: AI Voice Receptionist (Bland AI).",
   "scripts": {
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "test": "tsx scripts/build-assets.ts && vitest run",
+    "typecheck": "tsx scripts/build-assets.ts && tsc --noEmit",
     "preview-prompt": "tsx modules/voice-receptionist/preview.ts",
     "dev": "tsx watch server.ts",
     "start": "tsx server.ts",
     "bland": "tsx scripts/bland.ts",
-    "seed-demo": "tsx scripts/seed-demo.ts"
+    "seed-demo": "tsx scripts/seed-demo.ts",
+    "assets": "tsx scripts/build-assets.ts",
+    "build": "tsx scripts/build-assets.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

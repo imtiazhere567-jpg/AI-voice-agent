@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tenantSchema, type TenantConfig } from "./schema.js";
+import { packedFiles } from "../assets.js";
 import { countTenantConfigs, loadTenantConfigs, saveTenantConfig, type Sql } from "../db/postgres.js";
 
 /** Parse and validate one tenant config. Throws a readable error if invalid. */
@@ -34,8 +35,12 @@ export function loadTenantsFromDir(dir: string): Map<string, TenantConfig> {
  */
 export async function loadTenantsFromDb(sql: Sql, seedDir?: string): Promise<{ tenants: Map<string, TenantConfig>; imported: number }> {
   let imported = 0;
-  if (seedDir && existsSync(seedDir) && (await countTenantConfigs(sql)) === 0) {
-    for (const t of loadTenantsFromDir(seedDir).values()) { await saveTenantConfig(sql, t); imported++; }
+  if (seedDir && (await countTenantConfigs(sql)) === 0) {
+    // The folder on this computer, or the demo businesses packed into the code (Vercel).
+    const seed = existsSync(seedDir)
+      ? [...loadTenantsFromDir(seedDir).values()]
+      : packedFiles("test-data/tenants/").map((f) => parseTenant(JSON.parse(f.text), f.path));
+    for (const t of seed) { await saveTenantConfig(sql, t); imported++; }
   }
   const tenants = new Map<string, TenantConfig>();
   for (const raw of await loadTenantConfigs(sql)) {

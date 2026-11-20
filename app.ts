@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { isInServiceArea, isOpenAt } from "./core/rules/index.js";
 import { buildAutomaticPrompt, buildReceptionistPrompt } from "./modules/voice-receptionist/prompt-builder.js";
 import Fastify, { type FastifyRequest } from "fastify";
@@ -11,6 +10,7 @@ import { LiveCalls } from "./modules/voice-receptionist/live-calls.js";
 import { parseTenant } from "./core/tenant-config/loader.js";
 import { existsSync, mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { deleteTenantConfig, saveTenantConfig, type Sql } from "./core/db/postgres.js";
+import { readAsset } from "./core/assets.js";
 import { brainKind } from "./modules/voice-receptionist/claude-code-brain.js";
 import { join } from "node:path";
 import { buildBlandTestCall, buildBlandWebAgent, pickerVoices, type BlandClient } from "./integrations/voice/bland.js";
@@ -302,7 +302,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
     return [...tenants.values()].filter((t) => u && auth.canAccess(u, t.tenantId));
   };
 
-  const page = (name: string) => readFileSync(fileURLToPath(new URL(`./web/${name}`, import.meta.url)), "utf8");
+  const page = (name: string) => readAsset(`web/${name}`);
   app.get("/", async (req, reply) => {
     if (!userOf(req)) return reply.redirect("/login");
     return reply.type("text/html").header("cache-control", "no-store").send(page("dashboard.html")); // always load the newest version
@@ -674,7 +674,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
   const view = (c: ReturnType<LiveCalls["get"]>) => c && { ...c, secondsLeft: c.status === "ringing" ? Math.max(0, c.ringSeconds - (deps.now().getTime() - Date.parse(c.startedAt)) / 1000) : 0 };
 
   app.get("/phone", async (_req, reply) => {
-    const html = readFileSync(fileURLToPath(new URL("./web/phone.html", import.meta.url)), "utf8");
+    const html = readAsset("web/phone.html");
     return reply.type("text/html").header("cache-control", "no-store").send(html); // always load the newest version
   });
   app.post("/api/live/:tenantId/start", async (req: LiveReq, reply) => {
@@ -726,7 +726,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
 
   app.get("/book/:tenantId", async (req: PubReq, reply) => {
     if (!tenants.has(req.params.tenantId)) return reply.code(404).type("text/html").send("<h1>Business not found</h1>");
-    const html = readFileSync(fileURLToPath(new URL("./web/booking.html", import.meta.url)), "utf8");
+    const html = readAsset("web/booking.html");
     return reply.type("text/html").header("cache-control", "no-store").send(html); // always load the newest version
   });
 

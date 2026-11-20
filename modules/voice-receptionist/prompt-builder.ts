@@ -1,11 +1,9 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { fillTemplate } from "../../core/rules/index.js";
+import { readAsset } from "../../core/assets.js";
 import type { TenantConfig } from "../../core/tenant-config/schema.js";
 
 export const PROMPT_VERSION = "voice-receptionist/v1";
 
-const templatePath = fileURLToPath(new URL(`../../prompts/${PROMPT_VERSION}.md`, import.meta.url));
 
 const bullets = (items: string[]) => items.map((i) => `- ${i}`).join("\n");
 
@@ -36,7 +34,7 @@ export function safetyRules(tenant: TenantConfig): string {
 
 /** The script built from the business's settings. Same code for every business. */
 export function buildAutomaticPrompt(tenant: TenantConfig): string {
-  const template = readFileSync(templatePath, "utf8");
+  const template = readAsset(`prompts/${PROMPT_VERSION}.md`);
 
   const emergencyInstruction =
     tenant.emergency.action === "redirect"

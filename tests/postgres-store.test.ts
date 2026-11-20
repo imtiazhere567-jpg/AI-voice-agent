@@ -159,3 +159,19 @@ describe("Two copies of the app on one database (Vercel)", () => {
     expect(b.store.data.bookings.map((x) => x.customerName)).toEqual(["Sara"]);
   });
 });
+
+describe("Files packed into the code (Vercel)", () => {
+  it("has every page, the AI script template and the demo businesses", async () => {
+    const { EMBEDDED } = await import("../generated/assets.js");
+    for (const p of ["web/dashboard.html", "web/auth.html", "web/phone.html", "web/booking.html", "prompts/voice-receptionist/v1.md", "test-data/tenants/demo-roofing.json"]) {
+      expect(EMBEDDED[p], p).toBeTruthy();
+    }
+  });
+
+  it("adds the demo businesses to an empty database even without the folder", async () => {
+    const db = await freshDb();
+    const { tenants, imported } = await loadTenantsFromDb(db, "folder-that-is-not-there");
+    expect(imported).toBeGreaterThan(0);
+    expect(tenants.has("demo-roofing")).toBe(true);
+  });
+});
