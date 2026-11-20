@@ -1,0 +1,47 @@
+{
+  "tenantId": "quickfix-plumbing",
+  "businessName": "QuickFix Plumbing",
+  "industry": "plumbing",
+  "timezone": "America/Phoenix",
+  "testMode": true,
+  "hours": {
+    "mon": [{ "open": "08:00", "close": "17:00" }],
+    "tue": [{ "open": "08:00", "close": "17:00" }],
+    "wed": [{ "open": "08:00", "close": "17:00" }],
+    "thu": [{ "open": "08:00", "close": "17:00" }],
+    "fri": [{ "open": "08:00", "close": "17:00" }]
+  },
+  "serviceArea": { "zipCodes": ["85003", "85004", "85006", "85008", "85012", "85014", "85016"] },
+  "services": [
+    { "id": "leak", "name": "Leak repair", "appointmentMinutes": 90 },
+    { "id": "drain", "name": "Drain cleaning", "appointmentMinutes": 60 },
+    { "id": "water-heater", "name": "Water heater repair or replacement", "appointmentMinutes": 120 }
+  ],
+  "emergency": {
+    "keywords": ["burst pipe", "flooding", "flooded", "sewage", "gas smell", "no water"],
+    "action": "transfer",
+    "onCallNumbers": ["+16025550121"]
+  },
+  "qualifyingQuestions": [
+    { "field": "zip_code", "question": "What's the ZIP code where you need the work done?", "required": true },
+    { "field": "problem", "question": "Can you describe the problem in a few words?", "required": true },
+    { "field": "water_shut_off", "question": "Is the water shut off right now?", "required": false }
+  ],
+  "knowledgeBase": [
+    { "topic": "service fee", "answer": "There is a service call fee, which the technician will confirm before starting work." },
+    { "topic": "licensed", "answer": "Yes, all our plumbers are licensed and insured." }
+  ],
+  "approvedPrices": [],
+  "booking": { "calendarProvider": "google", "bufferMinutes": 30, "maxPerDay": 8, "minLeadHours": 2 },
+  "escalationContacts": [{ "name": "Dispatcher", "channel": "sms", "to": "+16025550120" }],
+  "voice": {
+    "greeting": "Thanks for calling QuickFix Plumbing. I'm the automated assistant.",
+    "language": "en",
+    "maxCallMinutes": 8
+  },
+  "recording": { "enabled": true, "notice": "This call may be recorded.", "retentionDays": 90 },
+  "textBack": {
+    "enabled": true,
+    "message": "Sorry we missed you! This is {businessName}. Reply to this text with your address and problem, and we'll get you scheduled."
+  }
+}

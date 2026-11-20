@@ -1,0 +1,177 @@
+{
+  "tenantId": "demo-roofing",
+  "businessName": "Demo Roofing Co.",
+  "industry": "roofing",
+  "timezone": "America/Chicago",
+  "testMode": true,
+  "hours": {
+    "mon": [
+      {
+        "open": "07:00",
+        "close": "18:00"
+      }
+    ],
+    "tue": [
+      {
+        "open": "07:00",
+        "close": "18:00"
+      }
+    ],
+    "wed": [
+      {
+        "open": "07:00",
+        "close": "18:00"
+      }
+    ],
+    "thu": [
+      {
+        "open": "07:00",
+        "close": "18:00"
+      }
+    ],
+    "fri": [
+      {
+        "open": "07:00",
+        "close": "18:00"
+      }
+    ],
+    "sat": [
+      {
+        "open": "08:00",
+        "close": "12:00"
+      }
+    ]
+  },
+  "serviceArea": {
+    "zipCodes": [
+      "77002",
+      "77003",
+      "77004",
+      "77006",
+      "77007",
+      "77008",
+      "77019",
+      "77098"
+    ]
+  },
+  "services": [
+    {
+      "id": "inspection",
+      "name": "Roof inspection",
+      "appointmentMinutes": 60
+    },
+    {
+      "id": "repair",
+      "name": "Roof repair estimate",
+      "appointmentMinutes": 60
+    },
+    {
+      "id": "replacement",
+      "name": "Full roof replacement estimate",
+      "appointmentMinutes": 90
+    },
+    {
+      "id": "storm",
+      "name": "Storm damage assessment",
+      "appointmentMinutes": 60
+    }
+  ],
+  "emergency": {
+    "keywords": [
+      "active leak",
+      "leaking",
+      "water coming through",
+      "ceiling water",
+      "tree on roof",
+      "tree fell",
+      "roof collapsed"
+    ],
+    "action": "transfer",
+    "onCallNumbers": [
+      "+17135550101",
+      "+17135550102"
+    ]
+  },
+  "qualifyingQuestions": [
+    {
+      "field": "zip_code",
+      "question": "What is the ZIP code of the property?",
+      "required": true
+    },
+    {
+      "field": "property_type",
+      "question": "Is this a home or a business?",
+      "required": true
+    },
+    {
+      "field": "insurance_claim",
+      "question": "Are you working with insurance on this, or paying yourself?",
+      "required": false
+    },
+    {
+      "field": "roof_type",
+      "question": "Do you know what type of roof it is, for example shingle, metal or flat?",
+      "required": false
+    }
+  ],
+  "knowledgeBase": [
+    {
+      "topic": "warranty",
+      "answer": "We offer a 10-year workmanship warranty on all replacements."
+    },
+    {
+      "topic": "financing",
+      "answer": "Yes, financing is available. The estimator can go over options at the visit."
+    },
+    {
+      "topic": "insurance",
+      "answer": "We can help you document damage for your insurance claim, but the insurance company decides coverage."
+    },
+    {
+      "topic": "estimate cost",
+      "answer": "Estimates and inspections are free."
+    }
+  ],
+  "approvedPrices": [
+    {
+      "item": "Roof inspection",
+      "price": "Free"
+    }
+  ],
+  "booking": {
+    "calendarProvider": "google",
+    "bufferMinutes": 30,
+    "maxPerDay": 6,
+    "minLeadHours": 12
+  },
+  "escalationContacts": [
+    {
+      "name": "Office manager",
+      "channel": "sms",
+      "to": "+17135550100"
+    },
+    {
+      "name": "Office manager",
+      "channel": "email",
+      "to": "office@demoroofing.example.com"
+    }
+  ],
+  "voice": {
+    "greeting": "Thanks for calling Demo Roofing. I'm the automated assistant.",
+    "language": "en",
+    "voiceId": "9d3a0685-4854-423f-94f9-6e7ad864e59c",
+    "maxCallMinutes": 8,
+    "ringSeconds": 10
+  },
+  "customInstructions": "",
+  "scriptOverride": "",
+  "recording": {
+    "enabled": true,
+    "notice": "This call may be recorded.",
+    "retentionDays": 90
+  },
+  "textBack": {
+    "enabled": true,
+    "message": "Sorry we missed your call! This is {businessName}. Book a free inspection here: {bookingLink} or just reply to this text."
+  }
+}

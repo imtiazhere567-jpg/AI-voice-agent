@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phone Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#121331; --ink2:#4a4d6b; --muted:#8a8daa; --line:rgba(255,255,255,.65); --glass:rgba(255,255,255,.55); --acc1:#7c5cff; --acc2:#4f8bff; --green:#16c784; --red:#ff4d6a; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; }
+  body { margin:0; font:14px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color:var(--ink); background:#eef0fb; overflow:hidden; -webkit-font-smoothing:antialiased; }
+  button, input { font:inherit; color:inherit; }
+  button { cursor:pointer; border:0; background:none; }
+  svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .bg { position:fixed; inset:0; z-index:-1; overflow:hidden; background:radial-gradient(1200px 800px at 0% 0%, #e6e0ff, transparent 60%), radial-gradient(900px 700px at 100% 20%, #d9efff, transparent 55%), radial-gradient(900px 700px at 50% 110%, #ffe4f1, transparent 55%), #f2f3fb; }
+  .blob { position:absolute; border-radius:50%; filter:blur(70px); opacity:.55; animation:float 18s ease-in-out infinite alternate; }
+  @keyframes float { to { transform:translate(40px,-30px) scale(1.08); } }
+  .glass { background:var(--glass); backdrop-filter:blur(24px) saturate(170%); -webkit-backdrop-filter:blur(24px) saturate(170%); border:1px solid var(--line); box-shadow:inset 0 1px 0 rgba(255,255,255,.85), 0 18px 50px -20px rgba(45,35,120,.25); }
+
+  .wrap { height:100%; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:40px; padding:24px 40px; }
+  @media (max-width:1100px){ .wrap { grid-template-columns:1fr; overflow:auto; } body { overflow:auto; } .side { display:none; } }
+
+  /* Side panels */
+  .side { max-width:380px; justify-self:end; border-radius:24px; padding:26px; }
+  .side.right { justify-self:start; }
+  .side h1 { margin:0 0 6px; font-size:22px; letter-spacing:-.02em; }
+  .side p { margin:0 0 18px; color:var(--ink2); }
+  .stepl { display:grid; gap:10px; }
+  .st { display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:16px; background:rgba(255,255,255,.45); border:1px solid rgba(255,255,255,.7); transition:all .3s; }
+  .st i { width:28px; height:28px; border-radius:10px; display:grid; place-items:center; font-style:normal; font-weight:700; font-size:12px; color:var(--ink2); background:rgba(255,255,255,.8); flex:none; }
+  .st b { display:block; font-weight:600; }
+  .st span { color:var(--muted); font-size:12.5px; }
+  .st.on { background:linear-gradient(135deg,rgba(124,92,255,.14),rgba(79,139,255,.12)); border-color:rgba(124,92,255,.35); }
+  .st.on i { background:linear-gradient(135deg,var(--acc1),var(--acc2)); color:#fff; box-shadow:0 6px 16px -6px var(--acc1); }
+  .st.done i { background:#d6f5e8; color:#0e8a5a; }
+  .gbtn { text-decoration:none; display:inline-flex; align-items:center; gap:8px; height:42px; padding:0 18px; border-radius:14px; color:#fff; font-weight:600; background:linear-gradient(135deg,var(--acc1),var(--acc2)); box-shadow:0 10px 24px -10px var(--acc1); }
+  .gbtn:hover { filter:brightness(1.06); }
+  .note { margin-top:16px; font-size:12.5px; color:var(--muted); }
+  .kv { display:grid; gap:8px; }
+  .kv div { display:flex; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.45); border:1px solid rgba(255,255,255,.7); }
+  .kv span { color:var(--muted); }
+  .kv b { font-weight:600; text-align:right; }
+
+  /* Phone */
+  .phone { width:390px; height:min(800px, calc(100vh - 48px)); border-radius:54px; padding:12px; background:linear-gradient(160deg,#2a2c3d,#0d0e16); box-shadow:0 0 0 2px #3b3e52, 0 50px 100px -30px rgba(20,15,60,.55); position:relative; }
+  @media (max-width:440px){ .phone { width:100%; } }
+  .screen { position:relative; height:100%; border-radius:43px; overflow:hidden; display:flex; flex-direction:column; color:#fff;
+    background:radial-gradient(120% 70% at 20% 0%, #5b47d6 0%, transparent 60%), radial-gradient(100% 60% at 100% 100%, #2b6fe0 0%, transparent 55%), #131432; }
+  .island { position:absolute; top:11px; left:50%; transform:translateX(-50%); width:118px; height:34px; border-radius:20px; background:#000; z-index:5; }
+  .status { height:52px; flex:none; display:flex; justify-content:space-between; align-items:center; padding:6px 30px 0; font-weight:600; font-size:14px; }
+  .scr { flex:1; display:flex; flex-direction:column; min-height:0; }
+  .scr[hidden], .bdg[hidden], .tabbar .bdg[hidden] { display:none; }
+  .gl { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+
+  /* dial */
+  .dial-h { padding:14px 24px 8px; }
+  .dial-h h2 { margin:0; font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .dial-h p { margin:2px 0 0; color:rgba(255,255,255,.65); font-size:13px; }
+  .modesw { display:flex; gap:4px; margin:10px 0 0; padding:4px; border-radius:14px; }
+  .modesw button { flex:1; padding:8px 6px; border:0; border-radius:10px; background:none; color:rgba(255,255,255,.75); font:600 12.5px inherit; cursor:pointer; }
+  .modesw button.on { background:#fff; color:#1b1d3a; }
+  .contacts { flex:1; overflow-y:auto; padding:8px 16px; display:grid; gap:8px; align-content:start; }
+  .ct { display:flex; align-items:center; gap:12px; padding:12px; border-radius:18px; text-align:left; color:#fff; transition:background .2s, transform .1s; }
+  .ct:hover { background:rgba(255,255,255,.16); }
+  .ct:active { transform:scale(.98); }
+  .ct.sel { background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.4); }
+  .av { width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:17px; flex:none; box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+  .ct b { display:block; font-weight:700; color:#fff; font-size:14.5px; }
+  .ct > span > span { font-size:12px; color:rgba(255,255,255,.65); }
+  .ct .ph { margin-left:auto; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:var(--green); box-shadow:0 6px 16px -4px rgba(22,199,132,.7); }
+  .ct .ph svg { width:15px; height:15px; color:#fff; }
+  .me { margin:8px 16px 18px; padding:12px 14px; border-radius:18px; display:flex; align-items:center; gap:10px; }
+  .me span { font-size:12.5px; color:rgba(255,255,255,.65); white-space:nowrap; }
+  .me input { flex:1; min-width:0; background:none; border:0; outline:0; color:#fff; font-weight:600; text-align:right; }
+
+  /* ringing */
+  .ring { flex:1; display:flex; flex-direction:column; align-items:center; padding-top:40px; text-align:center; }
+  .ring .big { width:110px; height:110px; font-size:42px; margin-bottom:18px; position:relative; }
+  .ring .big::before, .ring .big::after { content:""; position:absolute; inset:-10px; border-radius:50%; border:2px solid rgba(255,255,255,.35); animation:pulse 1.8s ease-out infinite; }
+  .ring .big::after { animation-delay:.9s; }
+  @keyframes pulse { from { transform:scale(.9); opacity:1; } to { transform:scale(1.5); opacity:0; } }
+  .ring h3 { margin:0; font-size:26px; font-weight:700; letter-spacing:-.01em; }
+  .ring .sub { color:rgba(255,255,255,.7); margin-top:4px; }
+  .countdown { margin-top:26px; padding:12px 16px; border-radius:16px; font-size:13px; color:rgba(255,255,255,.85); max-width:280px; }
+  .bar { height:4px; border-radius:4px; background:rgba(255,255,255,.18); overflow:hidden; margin-top:10px; }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,#9f8cff,#7fb2ff); transition:width .3s linear; }
+  .endrow { padding:20px 0 34px; display:flex; justify-content:center; gap:34px; }
+  .rb { display:grid; justify-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,.8); }
+  .rb button { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; color:#fff; }
+  .rb button svg { width:24px; height:24px; }
+  .rb .end { background:var(--red); box-shadow:0 10px 26px -8px rgba(255,77,106,.8); }
+  .rb .call { background:var(--green); box-shadow:0 10px 26px -8px rgba(22,199,132,.8); }
+  .rb .soft { background:rgba(255,255,255,.14); }
+  .rb .soft.on { background:#fff; color:#2b2d55; }
+
+  /* in call */
+  .ch { display:flex; align-items:center; gap:12px; padding:6px 18px 12px; }
+  .ch .av { width:40px; height:40px; font-size:15px; }
+  .ch b { display:block; font-weight:700; }
+  .ch span { font-size:12.5px; color:rgba(255,255,255,.7); }
+  .ch .tm { margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; color:rgba(255,255,255,.85); }
+  .msgs { flex:1; overflow-y:auto; padding:6px 14px 10px; display:flex; flex-direction:column; gap:8px; scrollbar-width:none; }
+  .msgs::-webkit-scrollbar { display:none; }
+  .m { max-width:84%; padding:9px 13px; border-radius:20px; font-size:13.5px; line-height:1.42; animation:pop .22s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { opacity:0; transform:translateY(6px) scale(.97); } }
+  .m.caller { align-self:flex-end; background:linear-gradient(135deg,#8a6dff,#5a8cff); border-bottom-right-radius:6px; }
+  .m.ai, .m.staff { align-self:flex-start; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.16); border-bottom-left-radius:6px; }
+  .m.staff { background:rgba(22,199,132,.22); border-color:rgba(22,199,132,.4); }
+  .m small { display:block; font-size:10.5px; font-weight:700; opacity:.7; margin-bottom:1px; text-transform:uppercase; letter-spacing:.04em; }
+  .m.system { align-self:center; font-size:11.5px; padding:4px 12px; color:rgba(255,255,255,.75); background:rgba(0,0,0,.2); border-radius:99px; }
+  .typing { align-self:flex-start; display:flex; gap:4px; padding:12px 14px; border-radius:18px; background:rgba(255,255,255,.12); }
+  .typing i { width:6px; height:6px; border-radius:50%; background:#fff; opacity:.6; animation:bounce 1s infinite; }
+  .typing i:nth-child(2){ animation-delay:.15s; } .typing i:nth-child(3){ animation-delay:.3s; }
+  @keyframes bounce { 50% { transform:translateY(-4px); opacity:1; } }
+  .listen { display:flex; align-items:center; gap:10px; margin:0 14px 8px; padding:9px 14px; height:40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-radius:16px; font-size:12.5px; color:rgba(255,255,255,.8); background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); cursor:pointer; }
+  .listen.speaking { background:rgba(138,109,255,.28); border-color:rgba(160,140,255,.6); color:#fff; }
+  .listen.speaking .bars i { animation:lb .7s ease-in-out infinite; background:#c9bdff; }
+  .listen.speaking .bars i:nth-child(2){animation-delay:.1s} .listen.speaking .bars i:nth-child(3){animation-delay:.2s} .listen.speaking .bars i:nth-child(4){animation-delay:.3s} .listen.speaking .bars i:nth-child(5){animation-delay:.4s}
+  .ch .av.talk { animation:talk 1s ease-in-out infinite; }
+  @keyframes talk { 0%,100% { box-shadow:0 0 0 0 rgba(160,140,255,.7); } 50% { box-shadow:0 0 0 9px rgba(160,140,255,0); } }
+  .listen.live { background:rgba(22,199,132,.18); border-color:rgba(22,199,132,.45); color:#fff; }
+  .listen.err { background:rgba(255,77,106,.2); border-color:rgba(255,77,106,.5); color:#fff; }
+  .listen .bars { display:flex; gap:3px; align-items:center; height:16px; }
+  .listen .bars i { width:3px; height:4px; border-radius:3px; background:currentColor; opacity:.7; }
+  .listen.live .bars i { animation:lb .9s ease-in-out infinite; }
+  .listen.live .bars i:nth-child(2){animation-delay:.12s} .listen.live .bars i:nth-child(3){animation-delay:.24s} .listen.live .bars i:nth-child(4){animation-delay:.36s} .listen.live .bars i:nth-child(5){animation-delay:.48s}
+  @keyframes lb { 50% { height:16px; } }
+  .sugs { display:flex; gap:6px; overflow-x:auto; padding:0 14px 8px; scrollbar-width:none; }
+  .sugs::-webkit-scrollbar { display:none; }
+  .sugs button { flex:none; padding:7px 12px; border-radius:99px; font-size:12.5px; font-weight:500; color:#fff; white-space:nowrap; }
+  .sugs button:hover { background:rgba(255,255,255,.24); }
+  .compose { display:flex; gap:8px; align-items:center; margin:0 12px; padding:6px; border-radius:99px; }
+  .compose input { flex:1; min-width:0; background:none; border:0; outline:0; color:#fff; padding:0 10px; }
+  .compose input::placeholder { color:rgba(255,255,255,.55); }
+  .compose button { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; color:#fff; }
+  .compose .send { background:linear-gradient(135deg,#8a6dff,#5a8cff); }
+  .compose .mic.on { background:var(--red); animation:micp 1.2s infinite; }
+  @keyframes micp { 50% { box-shadow:0 0 0 8px rgba(255,77,106,.25); } }
+  .callctl { display:flex; justify-content:center; gap:22px; padding:14px 0 26px; }
+  .callctl .rb button { width:54px; height:54px; }
+  .callctl .rb button svg { width:20px; height:20px; }
+
+  /* ended */
+  .ended { flex:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:50px 26px 0; }
+  .ended .big { width:84px; height:84px; font-size:32px; margin-bottom:16px; }
+  .ended h3 { margin:0; font-size:24px; }
+  .ended .sub { color:rgba(255,255,255,.7); }
+  .sumcard { margin-top:22px; padding:16px; border-radius:20px; text-align:left; font-size:13px; line-height:1.5; color:rgba(255,255,255,.9); width:100%; }
+  .sumcard b { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,255,255,.6); margin-bottom:6px; }
+  .tabbar { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:0 16px 10px; padding:5px; border-radius:18px; }
+  .tabbar button { display:flex; align-items:center; justify-content:center; gap:7px; height:40px; border-radius:14px; color:rgba(255,255,255,.7); font-weight:600; font-size:13px; position:relative; }
+  .tabbar button.on { background:rgba(255,255,255,.2); color:#fff; }
+  .tabbar .bdg { position:absolute; top:-6px; right:6px; box-shadow:0 0 0 2px #1b1c3d; min-width:18px; height:18px; padding:0 5px; border-radius:99px; background:var(--red); color:#fff; font-size:10.5px; font-weight:700; display:grid; place-items:center; }
+  .threads { flex:1; overflow-y:auto; overflow-x:hidden; padding:8px 16px; display:flex; flex-direction:column; gap:8px; }
+  .thr { display:flex; gap:12px; align-items:center; width:100%; min-width:0; padding:12px; border-radius:18px; text-align:left; color:#fff; transition:background .2s; }
+  .thr:hover { background:rgba(255,255,255,.16); }
+  .thr .av { width:44px; height:44px; font-size:17px; color:#fff; }
+  .thr .tx { flex:1; min-width:0; display:block; }
+  .thr .tx b { display:flex; justify-content:space-between; gap:8px; font-weight:700; font-size:14.5px; }
+  .thr .tx b time { font-size:11.5px; font-weight:500; color:rgba(255,255,255,.6); flex:none; }
+  .thr .tx b em { font-style:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .thr .tx > span { display:block; margin-top:2px; font-size:12.5px; color:rgba(255,255,255,.65); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .thr .unread { width:10px; height:10px; border-radius:50%; background:#4fa3ff; box-shadow:0 0 0 3px rgba(79,163,255,.25); flex:none; }
+  .th-h { display:flex; align-items:center; gap:10px; padding:4px 14px 10px; }
+  .th-h button { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; color:#fff; background:rgba(255,255,255,.12); }
+  .th-h b { font-weight:700; } .th-h span { display:block; font-size:12px; color:rgba(255,255,255,.65); }
+  .tmsgs { flex:1; overflow-y:auto; padding:6px 14px 10px; display:flex; flex-direction:column; gap:8px; scrollbar-width:none; }
+  .tmsgs::-webkit-scrollbar { display:none; }
+  .tmsgs .m.out { align-self:flex-start; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.16); border-bottom-left-radius:6px; }
+  .tmsgs .m.in { align-self:flex-end; background:linear-gradient(135deg,#8a6dff,#5a8cff); border-bottom-right-radius:6px; }
+  .tmsgs .m small { text-transform:none; letter-spacing:0; font-weight:600; }
+  .rb .call.shake { animation:shake 1.2s ease-in-out infinite; }
+  @keyframes shake { 0%,60%,100% { transform:rotate(0); } 10%,30%,50% { transform:rotate(-14deg); } 20%,40% { transform:rotate(14deg); } }
+  .thr .tx > span.to { color:rgba(255,255,255,.85); font-weight:600; font-size:11.5px; }
+  .banner { position:absolute; z-index:6; top:52px; left:10px; right:10px; display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:20px; text-align:left; color:#fff; background:rgba(30,30,60,.82); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.18); box-shadow:0 14px 30px -10px rgba(0,0,0,.6); transform:translateY(-130%); opacity:0; transition:transform .45s cubic-bezier(.2,.9,.3,1.2), opacity .3s; pointer-events:none; }
+  .banner.on { transform:none; opacity:1; pointer-events:auto; }
+  .banner .tx { flex:1; min-width:0; }
+  .banner b { display:block; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .banner b i { font-style:normal; font-weight:500; opacity:.7; }
+  .banner .tx > span { display:block; font-size:12.5px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .home { width:134px; height:5px; border-radius:5px; background:rgba(255,255,255,.5); margin:0 auto 9px; flex:none; }
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob" style="width:520px;height:520px;background:#b9a6ff;left:-120px;top:-80px"></div><div class="blob" style="width:460px;height:460px;background:#9fd0ff;right:-100px;top:120px;animation-delay:-6s"></div><div class="blob" style="width:420px;height:420px;background:#ffc2de;left:40%;bottom:-160px;animation-delay:-11s"></div></div>
+<svg style="display:none">
+  <symbol id="phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v3"/></symbol>
+  <symbol id="send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+  <symbol id="vol" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="ext" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+  <symbol id="back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="redo" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/></symbol>
+</svg>
+
+<div class="wrap">
+  <aside class="side glass">
+    <h1>Phone simulator</h1>
+    <p>Call a business like a real customer. The call rings on the owner's dashboard first.</p>
+    <div class="stepl">
+      <div class="st" id="st1"><i>1</i><div><b>You call the business</b><span>Pick a business and press the green button.</span></div></div>
+      <div class="st" id="st2"><i>2</i><div><b>It rings on the dashboard</b><span>The owner can answer it there.</span></div></div>
+      <div class="st" id="st3"><i>3</i><div><b>Nobody answers? AI picks up</b><span id="st3t">After the ring time, the AI answers automatically.</span></div></div>
+      <div class="st" id="st4"><i>4</i><div><b>Saved on the dashboard</b><span>Call summary, booking and alerts appear for the owner.</span></div></div>
+    </div>
+    <div style="margin-top:18px"><a class="gbtn" href="/" target="dashboard"><svg><use href="#ext"/></svg>Open owner dashboard</a></div>
+    <div class="note">Tip: put the dashboard and this phone side by side. During a call, just talk: the mic listens by itself (allow the microphone when the browser asks). You can also type.</div>
+  </aside>
+
+  <div class="phone"><div class="screen">
+    <div class="island"></div>
+    <button class="banner" id="banner"></button>
+    <div class="status"><span id="clock">9:41</span><span style="display:flex;gap:6px;align-items:center">5G <svg style="width:22px;height:12px" viewBox="0 0 26 12"><rect x="1" y="1" width="21" height="10" rx="3" fill="none" stroke="#fff" stroke-opacity=".5"/><rect x="3" y="3" width="15" height="6" rx="1.5" fill="#fff" stroke="none"/><rect x="23.5" y="4" width="1.5" height="4" rx=".7" fill="#fff" stroke="none" opacity=".5"/></svg></span></div>
+
+    <!-- DIAL -->
+    <section class="scr" id="s-dial">
+      <div class="dial-h"><h2>Call a business</h2><p>Businesses from the owner dashboard</p>
+        <div class="modesw gl"><button id="m-free" onclick="setMode('free')">Free practice</button><button id="m-bland" onclick="setMode('bland')">Real AI (Bland)</button></div>
+        <p id="brainnote" style="margin-top:6px;font-size:12px"></p></div>
+      <div class="contacts" id="contacts"></div>
+      <label class="me gl"><span>My number</span><input id="myNumber" value="(555) 010-0150" /></label>
+      <div class="tabbar gl"><button class="on" onclick="show('dial')"><svg><use href="#phone"/></svg>Calls</button><button onclick="openInbox()"><svg><use href="#send"/></svg>Messages<span class="bdg" id="bdg1" hidden></span></button></div>
+      <div class="home"></div>
+    </section>
+
+    <!-- MESSAGES: inbox -->
+    <section class="scr" id="s-msgs" hidden>
+      <div class="dial-h"><h2>Messages</h2><p>Texts businesses sent to customers (test phone)</p></div>
+      <div class="threads" id="threads"></div>
+      <div class="tabbar gl"><button onclick="show('dial')"><svg><use href="#phone"/></svg>Calls</button><button class="on"><svg><use href="#send"/></svg>Messages<span class="bdg" id="bdg2" hidden></span></button></div>
+      <div class="home"></div>
+    </section>
+
+    <!-- MESSAGES: one conversation -->
+    <section class="scr" id="s-thread" hidden>
+      <div class="th-h"><button onclick="openInbox()"><svg><use href="#back"/></svg></button><div class="av" id="th-av" style="width:38px;height:38px;font-size:15px"></div><div style="min-width:0"><b id="th-name"></b><span id="th-who">Text message</span></div></div>
+      <div class="tmsgs" id="tmsgs"></div>
+      <form class="compose gl" style="margin-bottom:14px" onsubmit="sendReply(event)"><input id="reply" placeholder="Text message" autocomplete="off" /><button class="send" title="Send"><svg><use href="#send"/></svg></button></form>
+      <div class="home"></div>
+    </section>
+
+    <!-- RINGING -->
+    <section class="scr" id="s-ring" hidden>
+      <div class="ring">
+        <div class="av big" id="r-av"></div>
+        <h3 id="r-name"></h3>
+        <div class="sub">Ringing…</div>
+        <div class="countdown gl"><span id="r-cd">If no one answers, the AI picks up.</span><div class="bar"><i id="r-bar" style="width:100%"></i></div></div>
+      </div>
+      <div class="endrow"><div class="rb"><button class="end" onclick="hangup()"><svg style="transform:rotate(135deg)"><use href="#phone"/></svg></button>Hang up</div></div>
+      <div class="home"></div>
+    </section>
+
+    <!-- INCOMING (a business is calling me) -->
+    <section class="scr" id="s-in" hidden>
+      <div class="ring">
+        <div class="sub" style="margin-bottom:22px">Incoming call</div>
+        <div class="av big" id="i-av"></div>
+        <h3 id="i-name"></h3>
+        <div class="sub" id="i-sub">is calling you…</div>
+      </div>
+      <div class="endrow" style="gap:70px">
+        <div class="rb"><button class="end" onclick="declineCall()"><svg style="transform:rotate(135deg)"><use href="#phone"/></svg></button>Decline</div>
+        <div class="rb"><button class="call shake" onclick="acceptCall()"><svg><use href="#phone"/></svg></button>Accept</div>
+      </div>
+      <div class="home"></div>
+    </section>
+
+    <!-- IN CALL -->
+    <section class="scr" id="s-call" hidden>
+      <div class="ch"><div class="av" id="c-av"></div><div><b id="c-who"></b><span id="c-sub"></span></div><span class="tm" id="c-tm">00:00</span></div>
+      <div class="msgs" id="msgs"></div>
+      <div class="listen" id="listen" onclick="toggleMic()"><span class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span id="listenTxt">Starting mic…</span></div>
+      <div class="sugs" id="sugs"></div>
+      <form class="compose gl" id="compose" onsubmit="send(event)">
+        <button type="button" class="mic" id="mic" onclick="toggleMic()" title="Speak"><svg><use href="#mic"/></svg></button>
+        <input id="say" placeholder="Type what you'd say…" autocomplete="off" />
+        <button class="send" title="Send"><svg><use href="#send"/></svg></button>
+      </form>
+      <div class="callctl">
+        <div class="rb" id="spkrb"><button class="soft on" id="spk" onclick="toggleSpeaker()"><svg><use href="#vol"/></svg></button>Speaker</div>
+        <div class="rb"><button class="end" onclick="hangup()"><svg style="transform:rotate(135deg)"><use href="#phone"/></svg></button>End</div>
+      </div>
+      <div class="home"></div>
+    </section>
+
+    <!-- ENDED -->
+    <section class="scr" id="s-end" hidden>
+      <div class="ended">
+        <div class="av big" id="e-av"></div>
+        <h3>Call ended</h3>
+        <div class="sub" id="e-sub"></div>
+        <div class="sumcard gl"><b>What the owner sees</b><span id="e-sum"></span></div>
+      </div>
+      <div class="endrow">
+        <div class="rb"><button class="soft" onclick="show('dial')"><svg><use href="#back"/></svg></button>Back</div>
+        <div class="rb"><button class="call" onclick="callAgain()"><svg><use href="#redo"/></svg></button>Call again</div>
+      </div>
+      <div class="home"></div>
+    </section>
+  </div></div>
+
+  <aside class="side right glass">
+    <h1 style="font-size:18px">This call</h1>
+    <p id="info-p">Pick a business on the phone to start.</p>
+    <div class="kv" id="info"></div>
+  </aside>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const GRAD = ["linear-gradient(135deg,#8a6dff,#5a8cff)", "linear-gradient(135deg,#ff7eb3,#ff758c)", "linear-gradient(135deg,#43e2b6,#2bb3ff)", "linear-gradient(135deg,#ffb36b,#ff7a59)"];
+let tenants = [], biz = null, call = null, poll = null, timer = null, shown = 0, speaker = true, rec = null, lastStatus = null;
+
+async function api(p, body) { const r = await fetch(p, body !== undefined ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {}); if (!r.ok) throw new Error(await r.text()); return r.json(); }
+function show(id) { ["dial", "ring", "call", "end", "msgs", "thread", "in"].forEach((s) => ($("s-" + s).hidden = s !== id)); if (id === "dial") { steps(0); info(); } }
+function steps(n, done) { [1, 2, 3, 4].forEach((i) => { $("st" + i).className = "st" + (i < n || (done && i <= n) ? " done" : i === n ? " on" : ""); }); }
+setInterval(() => ($("clock").textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M/, "")), 1000);
+
+let brain = "rules";
+// Only these businesses show on the phone screen. Empty list = show every business.
+const PHONE_BUSINESSES = ["demo-roofing"];
+async function loadContacts() {
+  try { tenants = await api("/api/phone/businesses"); brain = (await api("/api/ai-status")).brain; } catch { return; }
+  if (PHONE_BUSINESSES.length) tenants = tenants.filter((t) => PHONE_BUSINESSES.includes(t.tenantId));
+  $("contacts").innerHTML = tenants.length ? tenants.map((t, i) => `<button class="ct gl" onclick="dial('${t.tenantId}')"><span class="av" style="background:${GRAD[i % GRAD.length]}">${esc(t.businessName[0])}</span><span><b>${esc(t.businessName)}</b><span>${esc(cap(t.industry))} · ${aiMode === "bland" ? "Bland AI answers right away" : `AI answers after ${t.voice.ringSeconds}s`}</span></span><span class="ph"><svg><use href="#phone"/></svg></span></button>`).join("")
+    : `<div style="text-align:center;padding:40px 10px;color:rgba(255,255,255,.7)">No businesses yet.<br/>Add one on the owner dashboard → Businesses.</div>`;
+  renderMode();
+  if (aiMode === "bland") return;
+  $("brainnote").innerHTML = brain === "claude" ?"🟢 Smart AI (Claude) is on: talk freely."
+    : brain === "claude-code" ? "🟢 Smart AI via your Claude Code (local testing): talk freely."
+    : "🟡 Basic mode: install Claude Code or add a Claude key for full understanding.";
+}
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+async function init() {
+  await loadContacts();
+  show("dial");
+  setInterval(() => { if (!$("s-dial").hidden) loadContacts(); }, 5000);
+  addEventListener("focus", loadContacts);
+  const want = new URLSearchParams(location.search).get("biz");
+  if (want && tenants.some((t) => t.tenantId === want)) dial(want);
+}
+const avFor = (t) => GRAD[tenants.indexOf(t) % GRAD.length];
+
+function info() {
+  if (biz && call && call.direction === "out") {
+    $("info-p").textContent = biz.businessName + " is calling you.";
+    const st = { ringing: "Ringing on your phone", staff: "On the call with the team", ended: "Ended" };
+    $("info").innerHTML = [["Status", st[call.status] || call.status], ["Who", "A team member, from the dashboard"]].map(([k, v]) => "<div><span>" + k + "</span><b>" + esc(v) + "</b></div>").join("");
+    return;
+  }
+  if (!biz) { $("info").innerHTML = ""; $("info-p").textContent = "Pick a business on the phone to start."; return; }
+  $("info-p").textContent = `You're calling ${biz.businessName}.`;
+  const st = { ringing: "Ringing on dashboard", ai: "AI receptionist", staff: "Team member", ended: "Ended" };
+  $("info").innerHTML = [
+    ["Status", call ? st[call.status] : "Not started"],
+    ["AI answers after", `${biz.voice.ringSeconds} seconds`],
+    ["Services", biz.services.map((s) => s.name).slice(0, 3).join(", ") + (biz.services.length > 3 ? "…" : "")],
+    ["Emergency words", biz.emergency.keywords.slice(0, 3).join(", ") || "None set"],
+  ].map(([k, v]) => `<div><span>${k}</span><b>${esc(v)}</b></div>`).join("");
+}
+
+async function dial(id) {
+  biz = tenants.find((t) => t.tenantId === id);
+  ["r-av", "c-av", "e-av"].forEach((x) => { $(x).textContent = biz.businessName[0]; $(x).style.background = avFor(biz); });
+  $("r-name").textContent = biz.businessName;
+  $("st3t").textContent = `After ${biz.voice.ringSeconds} seconds, the AI answers automatically.`;
+  shown = 0; $("msgs").innerHTML = ""; $("sugs").innerHTML = ""; lastStatus = null;
+  blandUI(aiMode === "bland");
+  if (aiMode === "bland") return blandDial();
+  show("ring"); steps(2);
+  call = await api(`/api/live/${id}/start`, { from: $("myNumber").value });
+  info();
+  clearInterval(poll); poll = setInterval(refresh, 700);
+}
+function callAgain() { if (biz) dial(biz.tenantId); }
+
+async function refresh() {
+  if (!call) return;
+  try { call = await api(`/api/live/${biz.tenantId}/${call.id}`); } catch { return; }
+  info();
+  if (call.status === "ringing" && call.direction === "out") return;
+  if (call.status === "ringing") {
+    const pct = (call.secondsLeft / call.ringSeconds) * 100;
+    $("r-bar").style.width = pct + "%";
+    $("r-cd").textContent = `If no one answers in ${Math.ceil(call.secondsLeft)}s, the AI picks up.`;
+    return;
+  }
+  if (call.status !== lastStatus) {
+    lastStatus = call.status;
+    if (call.status === "ai" || call.status === "staff") {
+      show("call");
+      const isAI = call.status === "ai";
+      $("c-who").textContent = call.direction === "out" ? biz.businessName : isAI ? "AI receptionist" : "Team member";
+      $("c-sub").textContent = call.direction === "out" ? "Team member · they called you" : isAI ? `${biz.businessName} · nobody picked up` : `${biz.businessName} · answered on dashboard`;
+      steps(isAI ? 3 : 2, !isAI);
+      if (!isAI) $("st3").className = "st";
+      startTimer();
+      setTimeout(maybeListen, 400);
+    }
+  }
+  renderMsgs();
+  if (call.status === "ended") {
+    clearInterval(poll); clearInterval(timer); stopMic();
+    setTimeout(() => {
+      show("end"); steps(4, true);
+      const secs = call.answeredAt ? Math.round((Date.parse(call.endedAt) - Date.parse(call.answeredAt)) / 1000) : 0;
+      if (call.direction === "out" && !call.answeredAt) { $("e-sub").textContent = biz.businessName + " · " + (call.endedBy === "caller" ? "you declined" : call.endedBy === "no_answer" ? "missed call" : "they hung up"); $("e-sum").textContent = call.summary ?? ""; return; }
+      $("e-sub").textContent = call.answeredAt ? `${biz.businessName} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${biz.businessName} · not answered`;
+      $("e-sum").textContent = call.summary ?? "";
+    }, 1600);
+  }
+}
+
+function renderMsgs() {
+  const box = $("msgs");
+  const before = shown;
+  for (; shown < call.messages.length; shown++) {
+    if (shown === before) { box.querySelectorAll(".pending").forEach((e) => e.remove()); box.querySelector(".typing")?.remove(); }
+    const m = call.messages[shown];
+    if (m.from === "system" && /^Ringing/.test(m.text)) continue;
+    const label = m.from === "ai" ? "AI receptionist" : m.from === "staff" ? "Team member" : "";
+    box.insertAdjacentHTML("beforeend", `<div class="m ${m.from}">${label ? `<small>${label}</small>` : ""}${esc(m.text)}</div>`);
+    if ((m.from === "ai" || m.from === "staff") && speaker) speak(m.text);
+  }
+  $("sugs").innerHTML = (call.suggestions ?? []).map((s) => `<button class="gl" onclick="say(this.textContent)">${esc(s)}</button>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+
+function startTimer() {
+  clearInterval(timer);
+  const t0 = Date.parse(call?.answeredAt ?? new Date().toISOString());
+  timer = setInterval(() => { const s = Math.max(0, Math.round((Date.now() - t0) / 1000)); $("c-tm").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; }, 500);
+}
+
+let queued = [];
+async function say(text) {
+  text = text.trim(); if (!text || !call || call.status === "ended") return;
+  if (waiting) { queued.push(text); return; } // caller kept talking while we wait: send it next
+  $("say").value = "";
+  bargeIn(); // caller is talking: the AI stops speaking
+  waiting = true; listenUI();
+  $("msgs").insertAdjacentHTML("beforeend", `<div class="m caller pending">${esc(text)}</div>`);
+  if (call.status === "ai") $("msgs").insertAdjacentHTML("beforeend", `<div class="typing"><i></i><i></i><i></i></div>`);
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+  $("sugs").innerHTML = "";
+  try { await api(`/api/live/${biz.tenantId}/${call.id}/caller-say`, { text }); } catch {} finally { waiting = false; }
+  await refresh();
+  $("msgs").querySelectorAll(".pending,.typing").forEach((e) => e.remove()); // e.g. ignored as echo
+  listenUI();
+  if (queued.length) say(queued.splice(0).join(" "));
+}
+function send(e) { e.preventDefault(); say($("say").value); }
+
+async function hangup() {
+  if (blandOn) return blandHangup();
+  if (!call) return show("dial");
+  bargeIn(); stopMic();
+  call = await api(`/api/live/${biz.tenantId}/${call.id}/hangup`, { by: "caller" });
+  refresh();
+}
+
+/* ---------- Real AI (Bland) mode: the call goes to Bland's real receptionist, voice and all ---------- */
+let aiMode = "free";
+try { aiMode = localStorage.getItem("phoneAiMode") === "bland" ? "bland" : "free"; } catch {}
+let wc = null, blandOn = false;
+function setMode(m) { if (blandOn) return; aiMode = m; try { localStorage.setItem("phoneAiMode", m); } catch {} loadContacts(); }
+function renderMode() {
+  $("m-free").classList.toggle("on", aiMode === "free");
+  $("m-bland").classList.toggle("on", aiMode === "bland");
+  if (aiMode === "bland") $("brainnote").innerHTML = "🔵 Real Bland AI and voice, same as real callers hear. Uses Bland credit (about $0.14/min). Log in on the dashboard first.";
+}
+// Bland does the listening and speaking itself, so hide our mic, typing and speaker controls.
+function blandUI(on) {
+  ["listen", "sugs", "compose", "spkrb"].forEach((id) => ($(id).style.display = on ? "none" : ""));
+}
+function loadBlandSdk() {
+  if (window.Bland?.Webchat) return Promise.resolve();
+  window.react = window.react || {}; // the SDK's browser build expects a "react" global
+  return new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/bland-client-js-sdk@2.1.2/dist/browser/index.global.js";
+    s.onload = () => (window.Bland?.Webchat ? ok() : fail(new Error("Bland's voice library didn't load.")));
+    s.onerror = () => fail(new Error("Couldn't load Bland's voice library. Check the internet."));
+    document.head.appendChild(s);
+  });
+}
+function blandLine(who, text, pieces) {
+  text = String(text ?? "").trim(); if (!text) return;
+  const box = $("msgs"), last = box.lastElementChild;
+  if (pieces && last?.dataset.who === "ai" && last.dataset.pieces) { last.lastChild.textContent += " " + text; }
+  else {
+    const label = who === "ai" ? "<small>AI receptionist</small>" : "";
+    box.insertAdjacentHTML("beforeend", `<div class="m ${who}" data-who="${who}"${pieces ? ' data-pieces="1"' : ""}>${label}<span>${esc(text)}</span></div>`);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+// Bland sends each line as raw data like {"event":"update","payload":{"type":"assistant","text":"…","packetId":"…"}}
+// (sometimes as a JSON string), and the same line can arrive on two events. Show only the text, once.
+function blandParse(x) {
+  for (let i = 0; i < 3 && typeof x === "string"; i++) { // unwrap JSON strings (even double-wrapped)
+    const s = x.trim(), j = s.indexOf("{");
+    if (j < 0) return null; // plain status text from Bland, not a line of the conversation
+    try { x = JSON.parse(s.slice(j)); } catch { return null; }
+  }
+  const p = typeof x?.payload === "string" ? blandParse(x.payload) ?? {} : x?.payload ?? x ?? {};
+  if (p.who) return p;
+  const text = p.text ?? p.transcript ?? x?.text ?? x?.transcript;
+  if (typeof text !== "string" || !text.trim() || /^\s*[{[]/.test(text)) return null; // never show raw data
+  const role = String(p.type ?? p.role ?? x?.role ?? x?.speaker ?? "");
+  return { text: text.trim(), who: /user|human|caller/i.test(role) ? "caller" : "ai", id: p.packetId ?? x?.packetId };
+}
+function blandShow(raw) {
+  const m = blandParse(raw); if (!m) return;
+  const box = $("msgs");
+  const same = m.id ? box.querySelector(`[data-id="${CSS.escape(m.id)}"]`) : null;
+  if (same) { same.querySelector("span").textContent = m.text; return; } // update of a line already shown
+  const last = [...box.querySelectorAll(`[data-who="${m.who}"]`)].pop();
+  if (last && last.querySelector("span").textContent === m.text) return; // same line from the other event
+  blandLine(m.who, m.text);
+  if (m.id) box.lastElementChild.dataset.id = m.id;
+}
+async function blandDial() {
+  blandOn = true; call = null; clearInterval(poll);
+  $("r-bar").style.width = "100%";
+  $("r-cd").textContent = "Connecting to Bland's real AI… (the first time takes about 15 seconds)";
+  show("ring"); steps(1);
+  $("info-p").textContent = `You're calling ${biz.businessName} (real Bland AI).`;
+  let started = false;
+  try {
+    const [res] = await Promise.all([fetch(`/api/bland/${biz.tenantId}/web-call`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }), loadBlandSdk()]);
+    if (res.status === 401) throw new Error("Log in on the owner dashboard first (in this same browser), then call again.");
+    const r = await res.json();
+    if (!r.ok) throw new Error((r.errors ?? ["Couldn't start the call."]).join(" "));
+    if (!blandOn) return; // hung up while connecting
+    wc = new window.Bland.Webchat({});
+    wc.on("open", () => {
+      if (!blandOn) return;
+      started = true;
+      show("call"); steps(3);
+      $("c-who").textContent = "AI receptionist";
+      $("c-sub").textContent = `${biz.businessName} · real Bland AI`;
+      startTimer();
+      blandLine("system", "Connected. Say hello and talk like a customer.");
+    });
+    // Bland's library gives every message twice: "text" = the raw JSON string, "message" = the same thing unpacked.
+    // Use only the unpacked one, so raw data never shows.
+    wc.on("message", blandShow);
+    wc.on("error", (e) => { if (e?.type !== "parse-error" && e?.message) blandLine("system", "Problem: " + e.message); }); // ignore messages Bland's library couldn't unpack
+    wc.on("closed", () => blandEnded(started ? null : "Bland closed the call before it started."));
+    await wc.start({ agentId: r.agentId, sessionId: r.token });
+  } catch (e) {
+    const msg = /Permission|NotAllowed/i.test(String(e?.name ?? e)) ? "Microphone blocked. Allow the microphone in the address bar and try again." : e?.message ?? "Couldn't start the call.";
+    blandEnded(msg);
+  }
+}
+function blandHangup() {
+  if (wc) { try { wc.stop(); } catch {} } // "closed" event finishes the call
+  else blandEnded("Call canceled.");
+}
+function blandEnded(problem) {
+  if (!blandOn) return;
+  blandOn = false; wc = null; clearInterval(timer);
+  show("end"); steps(4, !problem);
+  $("e-sub").textContent = `${biz.businessName} · ${problem ? "not connected" : "real Bland AI · " + $("c-tm").textContent}`;
+  $("e-sum").textContent = problem ?? "Bland sends the call summary to the owner dashboard in about a minute. Open Calls to see it, plus any booking, callback or alert.";
+}
+
+/* ---------- voice: always listening, interrupt the AI, ignore its echo ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let handsFree = true, speaking = 0, waiting = false, recOn = false, recentAI = [];
+function inCall() { return call && (call.status === "ai" || call.status === "staff"); }
+const wordsOf = (t) => (t.toLowerCase().match(/[a-z0-9']+/g) || []).filter((w) => w.length > 2);
+// Is this just the AI's own voice coming back through the mic?
+// Only possible while the AI talks or just after. Later, the same words are a real answer
+// (e.g. "full roof replacement estimate" after the AI listed its services).
+function isEcho(t) {
+  if (!speaking && Date.now() - aiEndedAt > 2000) return false;
+  const w = wordsOf(t);
+  if (!w.length) return speaking > 0; // noise while the AI talks
+  return recentAI.some((ai) => { const set = new Set(wordsOf(ai)); return w.filter((x) => set.has(x)).length / w.length >= 0.6; });
+}
+
+// Background-noise filter: only clear speech meant for the AI is sent.
+const BARGE_WORDS = 4;      // words needed to interrupt the AI while it talks
+const TAIL_MS = 800;        // ignore the mic this long after the AI stops (its echo)
+const MIN_CONFIDENCE = 0.6; // speech the browser isn't sure about is usually background talk
+const SHORT_OK = /^(yes|yeah|yep|yup|no|nope|nah|ok|okay|sure|correct|right|bye|goodbye|thanks|hi|hello|hey|emergency|urgent|help|stop|wait|repair|leak|inspection|estimate|first|second|third|morning|afternoon|tomorrow|today|[0-9]+)$/i;
+let aiEndedAt = 0;
+const allWords = (t) => (t.match(/[a-z0-9']+/gi) || []).length;
+function rejectReason(t, confidence) {
+  if (confidence > 0 && confidence < MIN_CONFIDENCE) return "Didn't catch that clearly. Please say it again.";
+  // One stray word is usually background. Allow it if it's a normal short answer, or the browser is very sure (e.g. a name).
+  if (allWords(t) === 1 && !SHORT_OK.test(t.replace(/[^a-z0-9]/gi, "")) && !(confidence >= 0.8)) return "Listening… just talk";
+  return "";
+}
+
+// One male voice for the whole call. Browsers load voices late, so wait for them.
+const MALE = /(guy|davis|david|mark|andrew|christopher|eric|brian|roger|steffan|tony|jason|ryan|thomas|daniel|alex|fred|george|james|william|richard|\bmale\b)/i;
+const FEMALE = /(female|aria|jenny|zira|samantha|susan|hazel|libby|sonia|emma|ava|michelle|natasha|clara|karen|moira|tessa|fiona|victoria|serena|ana\b|joanna|salli|kimberly|ivy|kendra|heera|neerja)/i;
+let voice = null;
+function pickVoice() {
+  const en = (speechSynthesis.getVoices() || []).filter((v) => /^en[-_]/i.test(v.lang));
+  return en.find((v) => /en[-_]US/i.test(v.lang) && MALE.test(v.name) && !FEMALE.test(v.name))
+    ?? en.find((v) => MALE.test(v.name) && !FEMALE.test(v.name))
+    ?? en.find((v) => !FEMALE.test(v.name)) ?? null;
+}
+if ("speechSynthesis" in window) { voice = pickVoice(); speechSynthesis.onvoiceschanged = () => { voice = pickVoice(); }; }
+
+function speak(text, tries = 0) {
+  recentAI.push(text); if (recentAI.length > 4) recentAI.shift();
+  if (!("speechSynthesis" in window)) return;
+  if (!voice) voice = pickVoice();
+  if (!voice && tries < 10) { setTimeout(() => { recentAI.pop(); speak(text, tries + 1); }, 150); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  if (voice) u.voice = voice;
+  u.lang = voice?.lang ?? "en-US";
+  u.rate = 1.03; u.pitch = 0.9;
+  speaking++; listenUI();
+  utterances.push(u); // keep a reference: Chrome drops "onend" for utterances it garbage-collects
+  u.onend = u.onerror = () => { utterances = utterances.filter((x) => x !== u); speaking = Math.max(0, speaking - 1); aiEndedAt = Date.now(); listenUI(); };
+  speechSynthesis.speak(u);
+}
+function bargeIn() { if (speaking || speechSynthesis?.speaking) { speechSynthesis.cancel(); speaking = 0; utterances = []; aiEndedAt = Date.now(); listenUI(); } }
+let utterances = [], quietChecks = 0, lastHeard = 0;
+
+// Watchdog: keeps the call from getting stuck.
+setInterval(() => {
+  if (!inCall()) { quietChecks = 0; return; }
+  // 1) The browser forgot to say the AI finished speaking: stop waiting for it.
+  if (speaking && !speechSynthesis.speaking && !speechSynthesis.pending) {
+    if (++quietChecks >= 2) { speaking = 0; utterances = []; aiEndedAt = Date.now(); quietChecks = 0; listenUI(); }
+  } else quietChecks = 0;
+  if (!handsFree || !SR) return;
+  // 2) The mic stopped and didn't restart: start it again.
+  if (!recOn) { maybeListen(); return; }
+  // 3) The mic says it's on but has heard nothing for a long time (Chrome sometimes freezes it): restart it.
+  if (!speaking && !waiting && Date.now() - lastHeard > 25000) { lastHeard = Date.now(); try { rec?.abort(); } catch {} }
+}, 1000);
+
+// The mic stays on for the whole call (also while the AI talks, so you can interrupt).
+function maybeListen() {
+  if (!handsFree || !SR || recOn || !inCall()) { listenUI(); return; }
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+  rec.onstart = () => { lastHeard = Date.now(); };
+  rec.onresult = (e) => {
+    lastHeard = Date.now();
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i], t = r[0].transcript.trim();
+      if (!t || isEcho(t)) continue;
+      const n = allWords(t);
+      // While the AI talks: only a clear sentence from the caller interrupts it. Background sound is ignored.
+      if (speaking) { if (n >= BARGE_WORDS) bargeIn(); else continue; }
+      // Right after the AI stops, the mic still hears its last words (echo tail).
+      if (Date.now() - aiEndedAt < TAIL_MS) continue;
+      // While the AI is thinking, don't collect background talk.
+      if (waiting) continue;
+      if (!r.isFinal) { if (n >= 2 && !$("listen").classList.contains("err")) $("listenTxt").textContent = "You: " + t; continue; }
+      const why = rejectReason(t, r[0].confidence);
+      if (why) { if (!$("listen").classList.contains("err")) $("listenTxt").textContent = why; continue; }
+      $("listenTxt").textContent = "You: " + t;
+      say(t);
+    }
+  };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") { handsFree = false; $("listen").classList.add("err"); $("listenTxt").textContent = "Microphone blocked. Click the lock icon in the address bar and allow the microphone."; }
+  };
+  rec.onend = () => { recOn = false; rec = null; if (handsFree && inCall()) setTimeout(maybeListen, 120); else listenUI(); };
+  try { rec.start(); recOn = true; lastHeard = Date.now(); } catch { rec = null; recOn = false; } // the watchdog retries
+  listenUI();
+}
+function listenUI() {
+  const err = $("listen").classList.contains("err");
+  $("mic").classList.toggle("on", handsFree && inCall());
+  $("listen").classList.toggle("live", recOn && !speaking && !waiting);
+  $("listen").classList.toggle("speaking", speaking > 0);
+  $("c-av").classList.toggle("talk", speaking > 0);
+  if (err && handsFree) { $("listen").classList.remove("err"); }
+  if (err && !handsFree) return;
+  const cur = $("listenTxt").textContent;
+  if (cur.startsWith("You: ") && recOn && !waiting && !speaking) return; // keep showing what you're saying
+  $("listenTxt").textContent = !SR ? "Voice needs Chrome or Edge. Type below." : !handsFree ? "Mic is off. Tap here to turn it on." : waiting ? "Thinking…" : speaking ? "AI is speaking… you can interrupt" : recOn ? "Listening… just talk" : "Starting mic…";
+}
+function toggleSpeaker() { speaker = !speaker; $("spk").classList.toggle("on", speaker); if (!speaker) bargeIn(); }
+function toggleMic() {
+  if (!SR) { alert("Voice input needs Chrome or Edge. You can type instead."); return; }
+  handsFree = !handsFree;
+  if (!handsFree) stopMic(); else maybeListen();
+  listenUI();
+}
+function stopMic() { const r = rec; rec = null; recOn = false; try { r && (r.onend = null, r.abort()); } catch {} listenUI(); }
+/* ---------- Messages app ----------
+   In test mode this phone stands in for EVERY customer: it gets all texts the
+   businesses send. One thread per business + customer number. */
+let inbox = [], threadKey = null, seenCount = null, knownOut = null;
+try { seenCount = JSON.parse(localStorage.getItem("seenCount2") || "null"); } catch {}
+const myPhone = () => $("myNumber").value;
+const timeAgo = (iso) => { const s = (Date.now() - Date.parse(iso)) / 1000; return s < 60 ? "now" : s < 3600 ? Math.round(s / 60) + "m" : s < 86400 ? Math.round(s / 3600) + "h" : Math.round(s / 86400) + "d"; };
+const fmtNum = (p) => { const d = String(p || "").replace(/\D/g, "").slice(-10); return d.length === 10 ? "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6) : String(p || ""); };
+const keyOf = (m) => m.tenantId + "|" + m.phone;
+const whoOf = (m) => (m.customerName ? m.customerName + " · " : "") + fmtNum(m.phone);
+function groups() { const g = {}; inbox.forEach((m) => (g[keyOf(m)] ??= []).push(m)); return g; }
+const outCount = (ms) => ms.filter((m) => m.direction === "out").length;
+async function loadInbox() {
+  try { inbox = await api("/api/phone/inbox?all=1"); } catch { return; }
+  // New text from a business: show a banner like a real phone.
+  const outs = inbox.filter((m) => m.direction === "out");
+  if (knownOut) outs.filter((m) => !knownOut.has(m.id)).slice(-1).forEach(banner);
+  knownOut = new Set(outs.map((m) => m.id));
+  // First time on this phone: old texts count as read; only new ones get the badge.
+  if (!seenCount) { seenCount = {}; for (const [k, ms] of Object.entries(groups())) seenCount[k] = outCount(ms); try { localStorage.setItem("seenCount2", JSON.stringify(seenCount)); } catch {} }
+  loadInboxBadges();
+  if (!$("s-msgs").hidden) renderThreads();
+  if (!$("s-thread").hidden && threadKey) renderThread();
+}
+function banner(m) {
+  const b = $("banner"); if (!b) return;
+  b.innerHTML = '<span class="av" style="width:36px;height:36px;font-size:14px;background:' + GRAD[0] + '">' + esc(m.businessName[0]) + '</span><span class="tx"><b>' + esc(m.businessName) + " <i>to " + esc(whoOf(m)) + "</i></b><span>" + esc(m.body) + "</span></span>";
+  b.onclick = () => { b.classList.remove("on"); if (!busy()) openThread(keyOf(m)); };
+  b.classList.add("on"); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("on"), 5000);
+  try { const ctx = new AudioContext(); const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.1, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3); o.start(); o.stop(ctx.currentTime + 0.3); } catch {}
+}
+function renderThreads() {
+  const items = Object.entries(groups()).map(([k, ms]) => ({ k, ms, last: ms[ms.length - 1] })).sort((a, b) => b.last.at.localeCompare(a.last.at));
+  $("threads").innerHTML = items.length ? items.map(({ k, ms, last }, i) => {
+    const unread = outCount(ms) > (seenCount[k] || 0);
+    return '<button class="thr gl" onclick="openThread(\'' + k + '\')"><span class="av" style="background:' + GRAD[i % GRAD.length] + '">' + esc(last.businessName[0]) + '</span><span class="tx"><b><em>' + esc(last.businessName) + "</em><time>" + timeAgo(last.at) + '</time></b><span class="to">To ' + esc(whoOf(last)) + "</span><span>" + (last.direction === "in" ? "Reply: " : "") + esc(last.body) + "</span></span>" + (unread ? '<span class="unread"></span>' : "") + "</button>";
+  }).join("") : '<div style="text-align:center;padding:40px 10px;color:rgba(255,255,255,.7)">No messages yet.<br/>Texts a business sends to any customer (booking confirmations, missed-call texts, messages from the dashboard) show up here.</div>';
+}
+function openInbox() { show("msgs"); threadKey = null; loadInbox(); }
+function openThread(k) { threadKey = k; $("tmsgs").dataset.done = ""; show("thread"); renderThread(); }
+function renderThread() {
+  const ms = inbox.filter((m) => keyOf(m) === threadKey);
+  const first = ms[0];
+  const name = first?.businessName || "Business";
+  $("th-name").textContent = name; $("th-av").textContent = name[0]; $("th-av").style.background = GRAD[0];
+  $("th-who").textContent = first ? "Text to " + whoOf(first) : "Text message";
+  seenCount[threadKey] = outCount(ms);
+  try { localStorage.setItem("seenCount2", JSON.stringify(seenCount)); } catch {}
+  const box = $("tmsgs"), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = ms.map((m) => '<div class="m ' + m.direction + '">' + esc(m.body) + "<small>" + (m.direction === "out" ? (m.kind === "staff_message" ? (m.by || "Team") + " · " : "") : "You · ") + timeAgo(m.at) + "</small></div>").join("");
+  if (atBottom || !box.dataset.done) { box.scrollTop = box.scrollHeight; box.dataset.done = "1"; }
+  loadInboxBadges();
+}
+function loadInboxBadges() { let unread = 0; for (const [k, ms] of Object.entries(groups())) unread += Math.max(0, outCount(ms) - (seenCount[k] || 0)); ["bdg1", "bdg2"].forEach((id) => { $(id).hidden = !unread; $(id).textContent = unread; }); }
+async function sendReply(e) {
+  e.preventDefault(); const t = $("reply").value.trim(); if (!t || !threadKey) return;
+  const [tenantId, phone] = threadKey.split("|");
+  $("reply").value = "";
+  await api("/api/phone/reply", { tenantId, phone, body: t });
+  await loadInbox(); $("tmsgs").scrollTop = $("tmsgs").scrollHeight;
+}
+/* ---------- Calls from a business to my number ---------- */
+let ringTone = null;
+function startRingTone() {
+  stopRingTone();
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beep = () => { [0, 0.45].forEach((d) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 480; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.0001, ctx.currentTime + d); g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + d + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + d + 0.38); o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.4); }); };
+    beep(); ringTone = { ctx, t: setInterval(beep, 2200) };
+  } catch {}
+}
+function stopRingTone() { if (ringTone) { clearInterval(ringTone.t); try { ringTone.ctx.close(); } catch {} ringTone = null; } }
+const busy = () => call && call.status !== "ended";
+async function checkIncoming() {
+  if (busy()) return;
+  let list; try { list = await api("/api/phone/incoming?all=1"); } catch { return; }
+  const c = list[0]; if (!c || busy()) return;
+  biz = tenants.find((t) => t.tenantId === c.tenantId) || { tenantId: c.tenantId, businessName: c.businessName, voice: { ringSeconds: 0 }, services: [], emergency: { keywords: [] } };
+  call = c; shown = 0; lastStatus = null; $("msgs").innerHTML = ""; $("sugs").innerHTML = "";
+  ["i-av", "c-av", "e-av"].forEach((x) => { $(x).textContent = biz.businessName[0]; $(x).style.background = tenants.includes(biz) ? avFor(biz) : GRAD[0]; });
+  $("i-name").textContent = biz.businessName;
+  $("i-sub").textContent = "is calling " + (c.customerName || "you") + " · " + fmtNum(c.from);
+  $("myNumber").value = fmtNum(c.from); // this phone is now that customer's phone
+  show("in"); info(); startRingTone();
+  clearInterval(poll); poll = setInterval(refreshIncoming, 800);
+}
+// While my phone rings: if the business cancels or it rings out, show the missed call.
+async function refreshIncoming() {
+  if (!call || call.direction !== "out") return;
+  try { call = await api("/api/live/" + biz.tenantId + "/" + call.id); } catch { return; }
+  if (call.status !== "ringing") { stopRingTone(); clearInterval(poll); poll = setInterval(refresh, 700); refresh(); }
+}
+async function acceptCall() {
+  stopRingTone();
+  try { call = await api("/api/live/" + biz.tenantId + "/" + call.id + "/pickup", {}); } catch {}
+  clearInterval(poll); poll = setInterval(refresh, 700); refresh();
+}
+async function declineCall() {
+  stopRingTone();
+  try { call = await api("/api/live/" + biz.tenantId + "/" + call.id + "/hangup", { by: "caller" }); } catch {}
+  clearInterval(poll); poll = setInterval(refresh, 700); refresh();
+}
+setInterval(checkIncoming, 1500);
+
+setInterval(loadInbox, 3000);
+loadInbox();
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Receptionist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --glass: rgba(255,255,255,.58); --glass-2: rgba(255,255,255,.78); --glass-3: rgba(255,255,255,.4);
+    --stroke: rgba(255,255,255,.8); --line: rgba(30,30,80,.08); --line-2: rgba(30,30,80,.13);
+    --ink: #15163a; --ink-2: #4a4d70; --muted: #8b8eae; --faint: #b9bbd3;
+    --a1: #7c5cff; --a2: #4f8bff; --acc: #6d5dfc; --acc-soft: rgba(124,92,255,.12);
+    --green: #0fa97a; --green-soft: rgba(15,169,122,.12); --amber: #d98a00; --amber-soft: rgba(245,159,0,.14);
+    --red: #e8365a; --red-soft: rgba(232,54,90,.11); --blue: #2f7cf6; --blue-soft: rgba(47,124,246,.11);
+    --shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 14px 40px -18px rgba(40,32,120,.28);
+    --r: 20px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font: 13.5px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; color: var(--ink); background: #eef0fa; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  @media (max-width: 1100px), (max-height: 700px) { body { overflow: auto; } .app { height: auto !important; min-height: 100vh; } }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; background: none; padding: 0; }
+  a { color: inherit; text-decoration: none; }
+  svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  [hidden] { display: none !important; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Background */
+  .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: radial-gradient(1100px 760px at -5% -10%, #e4ddff, transparent 60%), radial-gradient(900px 700px at 105% 0%, #d6ecff, transparent 55%), radial-gradient(900px 700px at 60% 115%, #ffe1ef, transparent 55%), #f1f2fa; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .5; animation: float 22s ease-in-out infinite alternate; }
+  @keyframes float { to { transform: translate(50px, -40px) scale(1.1); } }
+
+  .glass { background: var(--glass); backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%); border: 1px solid var(--stroke); box-shadow: var(--shadow); border-radius: var(--r); }
+
+  .app { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 14px; padding: 14px; height: 100vh; }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; } .side { position: static !important; } }
+
+  /* ---------- Sidebar ---------- */
+  .side { display: flex; flex-direction: column; padding: 16px 12px; gap: 6px; min-height: 0; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 12px; font-weight: 800; font-size: 16px; letter-spacing: -.02em; }
+  .brand i { width: 32px; height: 32px; border-radius: 11px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 8px 18px -8px var(--a1); }
+  .brand i svg { width: 16px; height: 16px; }
+  .biz { position: relative; }
+  .biz-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--stroke); box-shadow: 0 4px 14px -8px rgba(40,32,120,.25); text-align: left; }
+  .biz-btn .lg { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 700; flex: none; }
+  .biz-btn b { display: block; font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .biz-btn span { font-size: 11.5px; color: var(--muted); text-transform: capitalize; }
+  .biz-btn > div { flex: 1; min-width: 0; }
+  .biz-menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30; padding: 6px; border-radius: 16px; background: rgba(255,255,255,.92); backdrop-filter: blur(20px); border: 1px solid var(--stroke); box-shadow: 0 20px 50px -18px rgba(40,32,120,.4); }
+  .biz-menu button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; text-align: left; font-weight: 600; font-size: 13px; }
+  .biz-menu button:hover { background: var(--acc-soft); }
+  .biz-menu .lg { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-size: 11px; }
+  .biz-menu .add { color: var(--acc); border-top: 1px solid var(--line); border-radius: 0 0 10px 10px; margin-top: 4px; padding-top: 10px; }
+  .grp { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 4px; }
+  .nav a { display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 12px; color: var(--ink-2); font-weight: 600; transition: background .15s; }
+  .nav a svg { color: var(--muted); }
+  .nav a:hover { background: rgba(255,255,255,.55); color: var(--ink); }
+  .nav a.on { background: var(--glass-2); color: var(--ink); box-shadow: 0 6px 18px -10px rgba(40,32,120,.35), inset 0 0 0 1px var(--stroke); }
+  .nav a.on svg { color: var(--acc); }
+  .badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+  .badge.red { background: var(--red); }
+  .badge.soft { background: rgba(30,30,80,.07); color: var(--ink-2); }
+  .side-foot { margin-top: auto; display: grid; gap: 10px; }
+  .me { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 14px; background: rgba(255,255,255,.55); border: 1px solid var(--stroke); }
+  .me .pic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 12px; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); flex: none; }
+  .me > div { flex: 1; min-width: 0; }
+  .me b { display: block; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .me span { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .me .role { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; margin-left: 4px; vertical-align: 1px; }
+  .role.admin { background: #fff1d6; color: #b06200; } .role.owner { background: var(--acc-soft); color: var(--acc); } .role.demo { background: var(--green-soft); color: var(--green); }
+  .me .out { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); }
+  .me .out:hover { color: var(--red); background: var(--red-soft); }
+  body.owner .adminonly { display: none !important; }
+  .side { overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .top { position: relative; z-index: 30; }
+  .me > div { min-width: 0; }
+  .try { padding: 12px 14px; } .try p { margin: 2px 0 8px; }
+  .um { position: relative; }
+  .umbtn { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 8px 0 3px; border-radius: 12px; background: var(--glass-2); border: 1px solid var(--stroke); }
+  .umbtn .pic, .umhead .pic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 12px; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+  .umenu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: 250px; padding: 8px; border-radius: 16px; background: rgba(255,255,255,.95); backdrop-filter: blur(20px); border: 1px solid var(--stroke); box-shadow: 0 20px 50px -18px rgba(40,32,120,.45); }
+  .umhead { display: flex; gap: 10px; align-items: center; padding: 8px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+  .umhead b { display: block; font-size: 13px; }
+  .umhead span { display: block; font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+  .umout { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; font-weight: 700; color: var(--red); }
+  .umout:hover { background: var(--red-soft); }
+  .me .out { width: 34px; height: 34px; flex: none; color: var(--red); background: var(--red-soft); }
+  .try { padding: 14px; border-radius: 18px; color: #fff; background: linear-gradient(135deg, #7c5cff, #4f8bff); box-shadow: 0 16px 30px -14px #6d5dfc; position: relative; overflow: hidden; }
+  .try::after { content: ""; position: absolute; width: 120px; height: 120px; border-radius: 50%; right: -40px; top: -50px; background: rgba(255,255,255,.18); }
+  .try b { display: block; font-size: 14px; }
+  .try p { margin: 2px 0 10px; font-size: 12px; opacity: .88; }
+  .try a { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 10px; background: rgba(255,255,255,.95); color: var(--acc); font-weight: 700; font-size: 12.5px; position: relative; z-index: 1; }
+  .mode { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--amber); background: var(--amber-soft); }
+  .mode i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* ---------- Main ---------- */
+  .main { display: flex; flex-direction: column; gap: 14px; min-height: 0; min-width: 0; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 22px; flex: none; }
+  .top h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+  .top p { margin: 0; color: var(--muted); font-size: 12.5px; }
+  .top .r { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 12px; font-weight: 600; font-size: 12.5px; background: var(--glass-2); border: 1px solid var(--stroke); white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px var(--green-soft); }
+  .dot.night { background: var(--acc); box-shadow: 0 0 0 4px var(--acc-soft); }
+  .livepill { color: #fff; background: linear-gradient(135deg, #12b886, #0ca678); border: 0; box-shadow: 0 8px 20px -8px #12b886; animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 8px 26px -4px #12b886; } }
+  .bell { position: relative; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--stroke); }
+  .bell b { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; font-size: 10.5px; display: grid; place-items: center; color: #fff; background: var(--red); box-shadow: 0 0 0 2px #fff; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 12px; font-weight: 600; font-size: 12.5px; white-space: nowrap; background: var(--glass-2); border: 1px solid var(--stroke); transition: transform .1s, background .15s; }
+  .btn:hover { background: #fff; }
+  .btn:active { transform: scale(.98); }
+  .btn.pri { color: #fff; border: 0; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 10px 22px -10px var(--a1); }
+  .btn.pri:hover { filter: brightness(1.06); }
+  .btn.green { color: #fff; border: 0; background: linear-gradient(135deg, #20c997, #0ca678); box-shadow: 0 10px 22px -10px #0ca678; }
+  .btn.red { color: #fff; border: 0; background: linear-gradient(135deg, #ff6b81, #e8365a); }
+  .btn.sm { height: 30px; padding: 0 11px; font-size: 12px; border-radius: 10px; }
+  .btn.ghost { background: transparent; border-color: transparent; }
+  .content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ---------- Overview ---------- */
+  .ov { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; flex: 1; min-height: 0; }
+  .kpi { padding: 16px 18px 12px; min-width: 0; position: relative; overflow: hidden; }
+  .kpi .lb { display: flex; align-items: center; gap: 9px; font-weight: 600; color: var(--ink-2); font-size: 12.5px; }
+  .kpi .ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; }
+  .kpi .ic svg { width: 15px; height: 15px; }
+  .kpi .vr { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+  .kpi .v { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .delta { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 7px; }
+  .delta.up { color: var(--green); background: var(--green-soft); } .delta.down { color: var(--red); background: var(--red-soft); } .delta.flat { color: var(--muted); background: rgba(30,30,80,.06); }
+  .spark { display: block; width: 100%; height: 30px; margin-top: 8px; }
+  .card { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
+  .ch { display: flex; align-items: center; gap: 10px; padding: 14px 18px 8px; flex: none; }
+  .ch h3 { margin: 0; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .ch .r { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .ch .link { font-size: 12px; font-weight: 600; color: var(--acc); }
+  .legend { display: flex; gap: 14px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 6px; }
+  .chartbox { flex: 1; min-height: 0; padding: 0 12px 8px; }
+  .chartbox svg { width: 100%; height: 100%; display: block; }
+  .lst { flex: 1; min-height: 0; overflow: hidden; padding: 2px 10px 10px; }
+  .li { display: flex; align-items: center; gap: 11px; padding: 8px; border-radius: 13px; }
+  .li:hover { background: rgba(255,255,255,.55); }
+  .av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; flex: none; }
+  .li .tx { flex: 1; min-width: 0; }
+  .li .tx b { display: block; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li .tx > span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .when { text-align: right; flex: none; font-size: 12px; }
+  .when b { display: block; font-weight: 700; font-size: 12.5px; }
+  .when span { color: var(--muted); }
+  .new-li { background: linear-gradient(90deg, rgba(124,92,255,.12), rgba(124,92,255,0) 70%); box-shadow: inset 3px 0 0 var(--a1); }
+  .newtag { font-size: 10px; font-weight: 800; letter-spacing: .06em; color: #fff; padding: 2px 7px; border-radius: 6px; background: linear-gradient(135deg, var(--a1), var(--a2)); }
+  .empty { height: 100%; min-height: 90px; display: grid; place-items: center; align-content: center; text-align: center; color: var(--muted); font-size: 12.5px; gap: 2px; }
+  .empty b { color: var(--ink-2); font-size: 13px; }
+  .tag { display: inline-flex; align-items: center; gap: 5px; height: 23px; padding: 0 9px; border-radius: 8px; font-size: 11.5px; font-weight: 600; white-space: nowrap; background: rgba(30,30,80,.06); color: var(--ink-2); }
+  .tag svg { width: 12px; height: 12px; }
+  .tag.green { color: var(--green); background: var(--green-soft); } .tag.amber { color: var(--amber); background: var(--amber-soft); } .tag.red { color: var(--red); background: var(--red-soft); }
+  .tag.blue { color: var(--blue); background: var(--blue-soft); } .tag.acc { color: var(--acc); background: var(--acc-soft); }
+  .iconbtn { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--stroke); color: var(--ink-2); flex: none; }
+  .iconbtn:hover { color: var(--green); background: #fff; }
+  .iconbtn svg { width: 15px; height: 15px; }
+
+  /* ---------- Hover, motion, overview widgets ---------- */
+  .hov { cursor: pointer; transition: transform .22s cubic-bezier(.2,.8,.3,1), box-shadow .22s; }
+  .hov:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 24px 48px -22px rgba(40,32,120,.45); }
+  .hov:active { transform: translateY(-1px); }
+  .kpi { text-align: left; color: inherit; font: inherit; width: 100%; }
+  .kgo { margin-left: auto; width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); background: rgba(255,255,255,.7); opacity: 0; transform: translateX(-4px); transition: .2s; }
+  .kgo svg { width: 14px; height: 14px; }
+  .kpi:hover .kgo { opacity: 1; transform: none; color: var(--acc); }
+  .card { transition: box-shadow .25s; }
+  .card:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 20px 46px -24px rgba(40,32,120,.38); }
+  .li { transition: background .15s, transform .15s; }
+  .li.go { cursor: pointer; }
+  .li.go:hover { background: rgba(255,255,255,.8); transform: translateX(3px); }
+  .btn, .iconbtn, .seg button, .pp, .x { transition: all .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .plabel { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 4px; }
+  .pp { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border-radius: 12px; background: var(--glass-2); border: 1px solid var(--stroke); font-weight: 600; font-size: 12.5px; color: var(--ink-2); cursor: pointer; white-space: nowrap; overflow: hidden; }
+  .pp svg { width: 14px; height: 14px; }
+  .pp:hover { background: #fff; }
+  .pp.on { color: #fff; border-color: transparent; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 8px 18px -8px var(--a1); }
+  .pp .chev { width: 12px; height: 12px; opacity: .55; transition: transform .2s; }
+  .pp.open { background: #fff; border-color: rgba(124,92,255,.45); box-shadow: 0 0 0 4px rgba(124,92,255,.12); }
+  .pp.open .chev { transform: rotate(180deg); }
+  .pp.on .chev { opacity: .85; }
+  /* Date / month picker */
+  .pick { position: fixed; z-index: 72; width: 300px; padding: 14px; border-radius: 22px; background: rgba(255,255,255,.88); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--stroke); box-shadow: 0 30px 70px -22px rgba(40,32,120,.45), inset 0 1px 0 #fff; transform-origin: top right; animation: pickin .22s cubic-bezier(.2,.9,.3,1.2); }
+  .pick.m { width: 280px; }
+  @keyframes pickin { from { opacity: 0; transform: translateY(-6px) scale(.96); } }
+  .pick-h { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .pick-h b { flex: 1; font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; padding-left: 4px; }
+  .pick-h button { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; color: var(--ink-2); background: rgba(30,30,80,.04); }
+  .pick-h button:hover:not(:disabled) { background: var(--acc-soft); color: var(--acc); }
+  .pick-h button:disabled { opacity: .3; cursor: default; }
+  .pick-h svg { width: 15px; height: 15px; }
+  .pick-w { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 4px; }
+  .pick-w span { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 4px 0; }
+  .pick-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .pick.m .pick-g { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .pick-g button { position: relative; height: 36px; border-radius: 11px; font-weight: 600; font-size: 13px; color: var(--ink); transition: background .15s, transform .1s; }
+  .pick.m .pick-g button { height: 46px; font-size: 13.5px; }
+  .pick-g button:hover:not(:disabled):not(.sel) { background: var(--acc-soft); color: var(--acc); }
+  .pick-g button:active:not(:disabled) { transform: scale(.94); }
+  .pick-g button.dim { color: var(--muted); opacity: .45; }
+  .pick-g button:disabled { color: var(--muted); opacity: .3; cursor: default; }
+  .pick-g button.today:not(.sel) { box-shadow: inset 0 0 0 1.5px var(--a1); color: var(--acc); }
+  .pick-g button.sel { color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 8px 18px -8px var(--a1); }
+  .pick-g button i { position: absolute; left: 50%; bottom: 4px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: #12b886; }
+  .pick.m .pick-g button i { bottom: 6px; }
+  .pick-g button.sel i { background: #fff; }
+  .pick-f { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .pick-f button { height: 30px; padding: 0 11px; border-radius: 9px; font-size: 12px; font-weight: 700; color: var(--acc); background: var(--acc-soft); }
+  .pick-f button:hover { filter: brightness(.96); }
+  .pick-f .clr { margin-left: auto; color: var(--muted); background: none; }
+  .pick-f .clr:hover { color: var(--red); }
+  .pick-n { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; margin-top: 8px; padding-left: 4px; }
+  .pick-n i { width: 6px; height: 6px; border-radius: 50%; background: #12b886; }
+  .nb { display: flex; align-items: center; gap: 12px; padding: 9px 10px 9px 14px; border-radius: 14px; margin-bottom: 7px; background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.8); cursor: pointer; transition: .18s; position: relative; }
+  .nb:hover { background: #fff; transform: translateX(3px); box-shadow: 0 12px 26px -18px rgba(40,32,120,.5); }
+  .nb::before { content: ""; position: absolute; left: 5px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: linear-gradient(var(--a1), var(--a2)); }
+  .nb .tx { flex: 1; min-width: 0; }
+  .nb .tx b { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; }
+  .nb .tx > span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dotnew { width: 7px; height: 7px; border-radius: 50%; background: var(--a1); box-shadow: 0 0 0 3px var(--acc-soft); flex: none; }
+  .nb .meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .ckb { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: rgba(255,255,255,.9); border: 1px solid var(--line); transition: .15s; flex: none; }
+  .ckb:hover { color: #fff; background: var(--green); border-color: var(--green); transform: scale(1.1); }
+  .ckb svg { width: 15px; height: 15px; }
+  .more { display: block; text-align: center; padding: 4px; font-size: 12px; font-weight: 700; color: var(--acc); }
+  .uday { font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 4px 0 2px 84px; }
+  .uit { display: grid; grid-template-columns: 62px 22px 1fr auto; align-items: center; gap: 0 8px; padding: 6px 8px; border-radius: 13px; cursor: pointer; transition: .15s; position: relative; }
+  .uit:hover { background: rgba(255,255,255,.8); }
+  .uit .tm { text-align: right; font-weight: 800; font-size: 13.5px; line-height: 1.05; }
+  .uit .tm small { display: block; font-size: 10px; color: var(--muted); font-weight: 700; }
+  .uit .dot { justify-self: center; width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 3px solid #cfd1e6; position: relative; z-index: 1; }
+  .uit::after { content: ""; position: absolute; left: 88px; top: 0; bottom: 0; width: 2px; background: rgba(30,30,80,.08); }
+  .uit.next { background: linear-gradient(90deg, rgba(124,92,255,.14), rgba(124,92,255,0)); }
+  .uit.next .dot { border-color: var(--a1); animation: pulse2 1.8s infinite; }
+  @keyframes pulse2 { 0% { box-shadow: 0 0 0 0 rgba(124,92,255,.45); } 70% { box-shadow: 0 0 0 9px rgba(124,92,255,0); } 100% { box-shadow: 0 0 0 0 rgba(124,92,255,0); } }
+  .uit .bd { min-width: 0; }
+  .uit .bd b { display: block; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uit .bd > span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nextup { font-size: 11px; font-weight: 800; color: #fff; padding: 4px 10px; border-radius: 99px; background: linear-gradient(135deg, var(--a1), var(--a2)); white-space: nowrap; box-shadow: 0 6px 14px -6px var(--a1); }
+  .soon { font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .modal.wide { width: min(780px, 100%); }
+  .mtop { padding: 4px 22px 8px; }
+  .mlist { padding: 0 14px; min-height: 120px; }
+  .mrow { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 13px; cursor: pointer; transition: .15s; }
+  .mrow:hover { background: rgba(124,92,255,.07); transform: translateX(2px); }
+  .mrow + .mrow { border-top: 1px solid var(--line); }
+  .mrow.sel { background: rgba(124,92,255,.12); box-shadow: inset 3px 0 0 var(--a1); }
+  .mrow .tx { flex: 1; min-width: 0; }
+  .mrow .tx b { display: block; font-weight: 700; }
+  .mrow .tx > span { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .newtag { display: inline-flex !important; align-items: center; width: auto !important; color: #fff !important; vertical-align: 1px; line-height: 1.5; }
+  .mic { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; flex: none; }
+  /* detail panel (slides in from the right) */
+  .scrim { position: fixed; inset: 0; z-index: 74; background: rgba(21,22,58,.2); backdrop-filter: blur(3px); animation: fade .25s; }
+  @keyframes fade { from { opacity: 0; } }
+  .panel { position: fixed; top: 14px; right: 14px; bottom: 14px; z-index: 75; width: min(540px, calc(100vw - 28px)); display: flex; flex-direction: column; border-radius: 26px; background: rgba(255,255,255,.9); backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--stroke); box-shadow: 0 40px 90px -30px rgba(40,32,120,.6); overflow: hidden; animation: pin .38s cubic-bezier(.2,.9,.25,1); }
+  @keyframes pin { from { transform: translateX(70px); opacity: 0; } }
+  .panel.out { animation: pout .22s ease-in forwards; }
+  @keyframes pout { to { transform: translateX(70px); opacity: 0; } }
+  .ph { padding: 20px 20px 14px; background: linear-gradient(135deg, rgba(124,92,255,.14), rgba(79,139,255,.07)); border-bottom: 1px solid var(--line); }
+  .ph-top { display: flex; align-items: center; gap: 14px; }
+  .ph-top .av { width: 54px; height: 54px; font-size: 18px; border-radius: 18px; }
+  .ph-top h2 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+  .ph-top .sub2 { color: var(--ink-2); font-size: 13px; font-weight: 600; }
+  .ph-top .x { margin-left: auto; align-self: flex-start; background: rgba(255,255,255,.75); }
+  .ph-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .ph-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .ph-stats div { padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.75); text-align: center; }
+  .ph-stats b { display: block; font-size: 16px; font-weight: 800; }
+  .ph-stats span { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .ph-act { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .ptabs { display: flex; gap: 2px; padding: 6px 14px 0; border-bottom: 1px solid var(--line); }
+  .ptabs button { padding: 10px 12px; font-weight: 700; font-size: 12.5px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; gap: 6px; align-items: center; }
+  .ptabs button:hover { color: var(--ink); }
+  .ptabs button.on { color: var(--acc); border-color: var(--a1); }
+  .ptabs .c { font-size: 10.5px; padding: 0 6px; border-radius: 99px; background: var(--acc-soft); color: var(--acc); }
+  .pbody { flex: 1; overflow-y: auto; padding: 18px 20px; scrollbar-width: thin; }
+  .kvg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .kvg > div { padding: 11px 12px; border-radius: 14px; background: rgba(255,255,255,.7); border: 1px solid var(--stroke); }
+  .kvg span { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .kvg b { display: block; font-weight: 700; font-size: 13.5px; margin-top: 2px; }
+  .box { padding: 13px 14px; border-radius: 14px; background: rgba(255,255,255,.7); border: 1px solid var(--stroke); margin-bottom: 14px; font-size: 13px; color: var(--ink-2); }
+  .box > b { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--acc); margin-bottom: 4px; }
+  .box.tip { background: var(--acc-soft); border-color: transparent; }
+  .ptl .st { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding-bottom: 16px; position: relative; animation: pop .25s ease-out both; }
+  .ptl .st::before { content: ""; position: absolute; left: 14px; top: 32px; bottom: 2px; width: 2px; background: rgba(30,30,80,.09); }
+  .ptl .st:last-child::before { display: none; }
+  .ptl .ico { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; }
+  .ptl .ico svg { width: 14px; height: 14px; }
+  .ptl b { display: block; font-size: 13px; font-weight: 700; }
+  .ptl p { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-2); }
+  .ptl time { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .thread { display: flex; flex-direction: column; gap: 8px; }
+  .pbody.chat { display: flex; flex-direction: column; }
+  .pbody.chat > .box { flex: none; margin-bottom: 12px; }
+  .pbody.chat > .thread { margin-top: auto; }
+  .pbody.chat > .empty { flex: 1; height: auto; }
+  .tb { max-width: 82%; padding: 9px 13px; border-radius: 16px; font-size: 13px; animation: pop .2s ease-out; }
+  .tb small { display: block; font-size: 10px; font-weight: 700; opacity: .72; margin-top: 3px; }
+  .tb.out { align-self: flex-end; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); border-bottom-right-radius: 5px; }
+  .tb.in { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+  .pfoot { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); background: rgba(255,255,255,.7); }
+  .hrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; cursor: pointer; transition: .15s; }
+  .hrow:hover { background: rgba(124,92,255,.08); }
+  .hrow .tx { flex: 1; min-width: 0; } .hrow .tx b { display: block; font-size: 13px; } .hrow .tx > span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hsec { font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+  .prio { display: inline-flex; padding: 3px; border-radius: 11px; background: rgba(30,30,80,.07); }
+  .prio button { height: 28px; padding: 0 12px; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--ink-2); }
+  .prio button.on.u { background: var(--red); color: #fff; }
+  .prio button.on.n { background: #fff; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+
+  /* ---------- Filters + tables ---------- */
+  .filters { display: flex; align-items: center; gap: 10px; padding: 10px; flex-wrap: wrap; flex: none; }
+  .search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 12px; background: var(--glass-2); border: 1px solid var(--stroke); min-width: 240px; color: var(--muted); }
+  .search input { border: 0; outline: 0; background: none; flex: 1; color: var(--ink); }
+  .seg { display: inline-flex; padding: 3px; border-radius: 12px; background: rgba(30,30,80,.05); }
+  .seg button { height: 32px; padding: 0 13px; border-radius: 9px; font-weight: 600; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 4px 12px -6px rgba(40,32,120,.35); }
+  .seg button .c { font-size: 10.5px; padding: 0 6px; border-radius: 99px; background: var(--acc-soft); color: var(--acc); }
+  .sel { height: 38px; padding: 0 32px 0 12px; border-radius: 12px; background: var(--glass-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8eae' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center; border: 1px solid var(--stroke); appearance: none; font-weight: 600; font-size: 12.5px; color: var(--ink-2); cursor: pointer; outline: none; }
+  .filters .r { margin-left: auto; display: flex; gap: 8px; }
+  .tcard { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .tbody { flex: 1; min-height: 0; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0 16px; height: 44px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 0 16px; height: 56px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: rgba(255,255,255,.55); }
+  tbody tr.click { cursor: pointer; }
+  tr.isnew { background: linear-gradient(90deg, rgba(124,92,255,.12), rgba(124,92,255,0) 60%); }
+  tr.isnew td:first-child { box-shadow: inset 3px 0 0 var(--a1); }
+  .cell { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .cell b { display: block; font-weight: 700; white-space: nowrap; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .clip { display: block; max-width: 460px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+  .pager { display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--line); flex: none; }
+  .pager .info { color: var(--muted); font-size: 12.5px; font-weight: 600; margin-right: auto; }
+  .pager button { min-width: 32px; height: 32px; padding: 0 8px; border-radius: 10px; font-weight: 700; font-size: 12.5px; color: var(--ink-2); }
+  .pager button:hover:not(:disabled) { background: rgba(255,255,255,.7); }
+  .pager button.on { color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 6px 14px -6px var(--a1); }
+  .pager button:disabled { opacity: .35; cursor: default; }
+  .pager .gap { color: var(--faint); padding: 0 2px; }
+
+  /* ---------- Businesses ---------- */
+  .bizgrid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; align-content: start; padding: 6px 4px; scrollbar-width: thin; }
+  .bz { position: relative; padding: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .bz:hover { transform: translateY(-2px); box-shadow: 0 24px 50px -22px rgba(40,32,120,.4); }
+  .bz.cur { border-color: rgba(124,92,255,.55); box-shadow: 0 0 0 4px rgba(124,92,255,.12), 0 20px 44px -22px rgba(90,70,220,.45); }
+  .bz-top { position: relative; padding: 18px 18px 16px; background: linear-gradient(135deg, rgba(124,92,255,.10), rgba(79,139,255,.06) 60%, transparent); border-bottom: 1px solid var(--line); }
+  .bz-h { display: flex; align-items: center; gap: 12px; }
+  .bz-h { align-items: flex-start; }
+  .bz-h .x { align-self: flex-start; }
+  .bz-h .lg { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 20px; flex: none; box-shadow: 0 10px 20px -10px rgba(40,32,120,.55), inset 0 1px 0 rgba(255,255,255,.35); }
+  .bz-h .nm { flex: 1; min-width: 0; }
+  .bz-h b { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bz-h .nm > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 12.5px; text-transform: capitalize; }
+  .bz-h .nm > span svg { width: 12px; height: 12px; }
+  .bz-pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 7px; }
+  .bz-pill { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 99px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .bz-pill.cur { color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 6px 14px -6px var(--a1); }
+  .bz-pill.test { color: #b26a00; background: rgba(255,170,40,.16); }
+  .bz-pill.live { color: #0b8a62; background: rgba(18,184,134,.14); }
+  .bz-pill i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .bz-h .x { width: 28px; height: 28px; }
+  .bz-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .bz-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .bz-stats div { padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.6); border: 1px solid var(--stroke); text-align: center; }
+  .bz-stats b { display: block; font-size: 19px; font-weight: 800; line-height: 1.2; }
+  .bz-stats span { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .bz-setup { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .bz-setup > div { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(30,30,80,.03); font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0; }
+  .bz-setup > div > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bz-setup .si { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; flex: none; background: var(--acc-soft); color: var(--acc); }
+  .bz-setup .si svg { width: 12px; height: 12px; }
+  .bz-setup .warn { background: rgba(255,170,40,.1); color: #b26a00; }
+  .bz-setup .warn .si { background: rgba(255,170,40,.2); color: #b26a00; }
+  .bz-act { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: auto; }
+  .bz-act .btn { justify-content: center; padding: 0 8px; }
+  .bz.add { gap: 10px; padding: 24px; align-items: center; justify-content: center; text-align: center; min-height: 300px; border: 2px dashed rgba(124,92,255,.35); background: rgba(255,255,255,.35); cursor: pointer; color: var(--acc); }
+  .bz.add:hover { background: rgba(255,255,255,.6); }
+  .bz.add i { width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); box-shadow: 0 12px 24px -10px var(--a1); }
+  .bz.add b { font-size: 15px; color: var(--ink); }
+  .bz.add span { color: var(--muted); font-size: 12.5px; max-width: 240px; }
+  .brainbox { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 16px; margin-bottom: 18px; }
+  .brainbox.ok { background: var(--green-soft); color: #08714f; }
+  .brainbox.warn { background: var(--amber-soft); color: #8a5600; }
+  .brainbox b { display: block; }
+  .brainbox code { background: rgba(255,255,255,.7); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+  .btn.pri.danger { background: linear-gradient(135deg, #ff6b81, #e8365a); box-shadow: 0 10px 22px -10px #e8365a; }
+  .wc-log { margin-top: 14px; max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.55); border: 1px solid var(--stroke); }
+  .wc-log > div { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; line-height: 1.45; }
+  .wc-log > div b { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .wc-log > div[data-who="you"] { align-items: flex-end; text-align: right; }
+  .wc-log > div[data-who="info"] span { color: var(--red); }
+
+  /* ---------- Training ---------- */
+  .train { flex: 1; min-height: 0; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 14px; }
+  .tabs { padding: 10px; display: flex; flex-direction: column; gap: 3px; min-height: 0; }
+  .tabs button { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: 12px; font-weight: 600; color: var(--ink-2); text-align: left; }
+  .tabs button:hover { background: rgba(255,255,255,.55); }
+  .tabs button.on { background: #fff; color: var(--ink); box-shadow: 0 6px 16px -10px rgba(40,32,120,.45); }
+  .tabs button.on svg { color: var(--acc); }
+  .tabs .hint { margin-top: auto; padding: 12px; font-size: 12px; color: var(--ink-2); border-radius: 14px; background: var(--acc-soft); }
+  .form { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .form-b { flex: 1; overflow-y: auto; padding: 20px 24px; scrollbar-width: thin; }
+  .form-h { padding: 18px 24px 0; flex: none; }
+  .form-h h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .form-h p { margin: 2px 0 0; color: var(--muted); }
+  .form-f { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); flex: none; }
+  .form-f .msg { margin-right: auto; font-size: 12.5px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .form-f .msg.dirty { color: var(--amber); }
+  .form-f .msg.err { color: var(--red); }
+  .fg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin-bottom: 22px; }
+  .fg.one { grid-template-columns: 1fr; }
+  .fld { display: grid; gap: 6px; }
+  .fld > span { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+  .fld small { color: var(--muted); font-size: 11.5px; }
+  .in { width: 100%; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(30,30,80,.1); background: rgba(255,255,255,.8); outline: none; transition: border .15s, box-shadow .15s; }
+  textarea.in { height: auto; min-height: 84px; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+  .in:focus { border-color: var(--a1); box-shadow: 0 0 0 4px var(--acc-soft); background: #fff; }
+  .sec { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+  .sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .rows { display: grid; gap: 8px; margin-bottom: 10px; }
+  .row { display: grid; gap: 8px; align-items: center; padding: 8px; border-radius: 14px; background: rgba(255,255,255,.5); border: 1px solid var(--stroke); }
+  .x { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); }
+  .x:hover { color: var(--red); background: var(--red-soft); }
+  .x svg { width: 15px; height: 15px; }
+  .add { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; font-weight: 700; font-size: 12.5px; color: var(--acc); background: var(--acc-soft); margin-bottom: 22px; }
+  .tgl { position: relative; width: 40px; height: 23px; border-radius: 99px; background: rgba(30,30,80,.15); transition: background .2s; flex: none; }
+  .tgl::after { content: ""; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: transform .2s; }
+  .tgl.on { background: linear-gradient(135deg, var(--a1), var(--a2)); }
+  .tgl.on::after { transform: translateX(17px); }
+  .tglrow { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.5); border: 1px solid var(--stroke); }
+  .tglrow b { display: block; font-weight: 700; font-size: 13px; }
+  .tglrow span { color: var(--muted); font-size: 12px; }
+  .tglrow > div { flex: 1; }
+  .hours { display: grid; gap: 6px; margin-bottom: 22px; }
+  .hr { display: grid; grid-template-columns: 70px 50px 1fr 1fr; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.5); border: 1px solid var(--stroke); }
+  .hr b { font-weight: 700; }
+  .hr .closed { grid-column: 3 / 5; color: var(--muted); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 12px; border: 1px solid rgba(30,30,80,.1); background: rgba(255,255,255,.8); margin-bottom: 22px; }
+  .chips span { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 6px 0 10px; border-radius: 8px; font-weight: 600; font-size: 12.5px; background: var(--red-soft); color: var(--red); }
+  .chips span button { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 5px; }
+  .chips input { flex: 1; min-width: 160px; border: 0; outline: 0; background: none; height: 28px; }
+  .ideas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 20px; }
+  .ideas button { padding: 6px 11px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.7); border: 1px solid var(--stroke); color: var(--ink-2); }
+  .ideas button:hover { color: var(--acc); }
+  .radio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .radio button { text-align: left; padding: 12px 14px; border-radius: 14px; border: 1.5px solid rgba(30,30,80,.1); background: rgba(255,255,255,.6); }
+  .radio button b { display: block; font-weight: 700; }
+  .radio button span { color: var(--muted); font-size: 12px; }
+  .radio button.on { border-color: var(--a1); background: #fff; box-shadow: 0 0 0 4px var(--acc-soft); }
+  .vp-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .vp-bar .in { flex: 1; min-width: 200px; }
+  .vp-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--stroke); border-radius: 16px; background: rgba(255,255,255,.55); }
+  .vp-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--stroke); background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .vp-row:hover { background: rgba(255,255,255,.7); }
+  .vp-row.on { background: var(--acc-soft); }
+  .vp-dot { flex: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--stroke); }
+  .vp-row.on .vp-dot { border: 5px solid var(--acc); }
+  .vp-tx { flex: 1; min-width: 0; display: grid; }
+  .vp-tx b { font-weight: 600; text-transform: capitalize; }
+  .vp-tx span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vp-r { font-size: 12px; color: var(--amber); white-space: nowrap; }
+  .vp-play { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--stroke); background: #fff; color: var(--acc); font-size: 12px; cursor: pointer; display: grid; place-items: center; }
+  .vp-play:hover, .vp-play.on { background: var(--acc); color: #fff; }
+  textarea.in.script-edit { width: 100%; height: 62vh !important; min-height: 420px; resize: vertical; font: 12.5px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; padding: 14px; }
+  pre.script { margin: 0; padding: 18px; border-radius: 16px; background: rgba(21,22,58,.92); color: #d9dcff; font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; }
+  .range { display: flex; align-items: center; gap: 12px; }
+  .range input { flex: 1; accent-color: var(--a1); }
+  .range b { min-width: 46px; text-align: right; font-weight: 800; }
+  .errbox { margin-bottom: 16px; padding: 12px 14px; border-radius: 14px; background: var(--red-soft); color: var(--red); font-weight: 600; font-size: 12.5px; }
+
+  /* ---------- Overlays ---------- */
+  .ring { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 60; width: min(440px, calc(100vw - 32px)); padding: 18px; border-radius: 24px; background: rgba(255,255,255,.82); backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--stroke); box-shadow: 0 30px 70px -20px rgba(40,32,120,.5); animation: drop .35s cubic-bezier(.2,.9,.3,1.25); }
+  @keyframes drop { from { transform: translate(-50%, -30px); opacity: 0; } }
+  .ring-h { display: flex; align-items: center; gap: 14px; }
+  .ring-av { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #20c997, #0ca678); position: relative; flex: none; }
+  .ring-av::before, .ring-av::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #20c997; animation: rp 1.5s ease-out infinite; }
+  .ring-av::after { animation-delay: .75s; }
+  @keyframes rp { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.45); opacity: 0; } }
+  .ring-av svg { width: 22px; height: 22px; animation: shake .9s ease-in-out infinite; }
+  @keyframes shake { 0%, 50%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(-14deg); } 20%, 40% { transform: rotate(14deg); } }
+  .ring-h small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
+  .ring-h b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+  .ring-h span { color: var(--muted); font-size: 12.5px; }
+  .ring-bar { height: 5px; border-radius: 5px; background: rgba(30,30,80,.08); overflow: hidden; margin: 14px 0 6px; }
+  .ring-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--a1), var(--a2)); transition: width .4s linear; }
+  .ring-cd { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+  .ring-b { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .ring-b .btn { height: 42px; justify-content: center; font-size: 13.5px; }
+
+  .drawer { position: fixed; top: 14px; right: 14px; bottom: 14px; z-index: 80; width: min(420px, calc(100vw - 28px)); display: flex; flex-direction: column; border-radius: 24px; background: rgba(255,255,255,.8); backdrop-filter: blur(30px) saturate(180%); border: 1px solid var(--stroke); box-shadow: 0 30px 80px -24px rgba(40,32,120,.5); animation: slide .3s cubic-bezier(.2,.9,.3,1.1); overflow: hidden; }
+  @keyframes slide { from { transform: translateX(40px); opacity: 0; } }
+  .ring-av.out { background: linear-gradient(135deg, #12b886, #0ca678) !important; }
+  .dr-h { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .dr-h b { display: block; font-weight: 800; font-size: 15px; }
+  .dr-h span { color: var(--muted); font-size: 12.5px; }
+  .dr-h .x { margin-left: auto; }
+  .dr-s { display: flex; gap: 8px; align-items: center; padding: 10px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 9px; }
+  .m { max-width: 85%; padding: 9px 13px; border-radius: 16px; font-size: 13px; line-height: 1.45; animation: pop .2s ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(4px); } }
+  .m small { display: block; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .65; margin-bottom: 1px; }
+  .m.caller { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+  .m.ai { align-self: flex-end; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); border-bottom-right-radius: 5px; }
+  .m.staff { align-self: flex-end; color: #fff; background: linear-gradient(135deg, #20c997, #0ca678); border-bottom-right-radius: 5px; }
+  .m.system { align-self: center; font-size: 11.5px; color: var(--ink-2); background: rgba(30,30,80,.06); border-radius: 99px; padding: 4px 12px; }
+  .dr-f { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+  .dr-f input { flex: 1; }
+  .sumbox { margin: 0 16px 14px; padding: 12px 14px; border-radius: 14px; background: var(--acc-soft); font-size: 12.5px; color: var(--ink-2); }
+  .sumbox b { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--acc); margin-bottom: 3px; }
+
+  .modal-bg { position: fixed; inset: 0; z-index: 70; display: grid; grid-template-columns: minmax(0, 1fr); /* long text (e.g. call summaries) must not stretch the popup off-screen */ place-items: center;background: rgba(21,22,58,.25); backdrop-filter: blur(4px); padding: 16px; }
+  .modal { width: min(520px, 100%); border-radius: 24px; background: rgba(255,255,255,.9); backdrop-filter: blur(30px); border: 1px solid var(--stroke); box-shadow: 0 40px 90px -30px rgba(40,32,120,.55); animation: drop2 .3s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes drop2 { from { transform: translateY(16px) scale(.98); opacity: 0; } }
+  .modal-h { padding: 20px 22px 6px; }
+  .modal-h h2 { margin: 0; font-size: 18px; font-weight: 800; }
+  .modal-h p { margin: 2px 0 0; color: var(--muted); }
+  .modal-b { padding: 14px 22px; }
+  .modal-f { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px 20px; }
+
+  .toasts { position: fixed; right: 22px; bottom: 22px; z-index: 80; display: grid; gap: 10px; }
+  .toast { display: flex; align-items: center; gap: 12px; min-width: 280px; max-width: 380px; padding: 12px 14px; border-radius: 16px; background: rgba(21,22,58,.92); color: #fff; box-shadow: 0 20px 40px -14px rgba(21,22,58,.6); animation: drop2 .3s ease-out; }
+  .toast i { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--a1), var(--a2)); flex: none; }
+  .toast b { display: block; font-size: 13px; }
+  .toast span { font-size: 12px; opacity: .75; }
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob" style="width:560px;height:560px;background:#c3b4ff;left:-140px;top:-120px"></div><div class="blob" style="width:480px;height:480px;background:#a9d6ff;right:-120px;top:80px;animation-delay:-7s"></div><div class="blob" style="width:460px;height:460px;background:#ffc9e0;left:42%;bottom:-200px;animation-delay:-13s"></div></div>
+<svg style="display:none">
+  <symbol id="phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+  <symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="back" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="off" viewBox="0 0 24 24"><path d="M10.7 13.3a16 16 0 0 0 3.4 2.6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 4.2 2 2 0 0 1 5.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 9.9"/><path d="M22 2 2 22"/></symbol>
+  <symbol id="brain" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v.5a3 3 0 0 0-3 3v1a3 3 0 0 0 0 6v1a3 3 0 0 0 3 3v.5A2.5 2.5 0 0 0 9.5 22h0a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 9.5 2zM14.5 2A2.5 2.5 0 0 1 17 4.5v.5a3 3 0 0 1 3 3v1a3 3 0 0 1 0 6v1a3 3 0 0 1-3 3v.5a2.5 2.5 0 0 1-2.5 2.5h0a2.5 2.5 0 0 1-2.5-2.5"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="ext" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+  <symbol id="bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+  <symbol id="l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+  <symbol id="bot" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 14h.01M16 14h.01"/></symbol>
+  <symbol id="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0M12 19v3"/></symbol>
+  <symbol id="tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></symbol>
+  <symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></symbol>
+  <symbol id="book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/></symbol>
+  <symbol id="code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></symbol>
+  <symbol id="logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="store" viewBox="0 0 24 24"><path d="M3 9 4.5 4h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side glass">
+    <div class="brand"><i><svg><use href="#phone"/></svg></i>Receptionist</div>
+    <div class="biz">
+      <button class="biz-btn" onclick="toggleBizMenu(event)"><span class="lg" id="b-lg"></span><div><b id="b-name"></b><span id="b-ind"></span></div><svg style="color:var(--muted)"><use href="#down"/></svg></button>
+      <div class="biz-menu" id="bizmenu" hidden></div>
+    </div>
+    <nav class="nav">
+      <div class="grp">Workspace</div>
+      <a href="#overview" data-p="overview"><svg><use href="#grid"/></svg>Overview</a>
+      <a href="#calls" data-p="calls"><svg><use href="#phone"/></svg>Calls<span class="badge soft" id="n-calls" hidden></span></a>
+      <a href="#bookings" data-p="bookings"><svg><use href="#cal"/></svg>Bookings<span class="badge" id="n-new" hidden></span></a>
+      <a href="#callbacks" data-p="callbacks"><svg><use href="#back"/></svg>Callbacks<span class="badge red" id="n-cb" hidden></span></a>
+      <div class="grp">Setup</div>
+      <a href="#businesses" data-p="businesses"><svg><use href="#store"/></svg>Businesses<span class="badge soft" id="n-biz"></span></a>
+      <a href="#training" data-p="training"><svg><use href="#brain"/></svg>AI Training</a>
+      <a id="bookLink" target="_blank"><svg><use href="#globe"/></svg>Booking page<svg style="margin-left:auto;width:13px;height:13px"><use href="#ext"/></svg></a>
+    </nav>
+    <div class="side-foot">
+      <div class="try"><b>Try a call</b><p>Call this business from the phone simulator.</p><a href="/phone" target="phone"><svg style="width:14px;height:14px"><use href="#phone"/></svg>Open simulator</a></div>
+      <div class="mode" id="mode"><i></i>Test mode · nothing is sent</div>
+      <div class="me" id="me"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="top glass">
+      <div><h1 id="title">Overview</h1><p id="subtitle"></p></div>
+      <div class="r">
+        <button class="pill livepill" id="livepill" hidden onclick="openDrawer()"><span class="dot" style="background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.3)"></span><span></span></button>
+        <span class="pill" id="openpill"><span class="dot"></span><span></span></span>
+        <button class="bell" onclick="location.hash='#bookings';setFilter('book','status','new')" title="New bookings"><svg><use href="#bell"/></svg><b id="bellc" hidden></b></button>
+        <a class="btn pri" href="/phone" target="phone"><svg><use href="#phone"/></svg>Phone simulator</a>
+        <div class="um"><button class="umbtn" onclick="toggleUM(event)"><span class="pic" id="um-pic"></span><svg style="width:15px;height:15px;color:var(--muted)"><use href="#down"/></svg></button>
+          <div class="umenu" id="umenu" hidden><div class="umhead" id="um-head"></div><button class="umout" onclick="logout()"><svg><use href="#logout"/></svg>Log out</button></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- OVERVIEW -->
+      <section class="page" data-page="overview">
+        <div class="ov">
+          <button class="kpi glass hov" onclick="openKpi('calls')"><div class="lb"><span class="ic" style="background:var(--acc-soft);color:var(--acc)"><svg><use href="#phone"/></svg></span>Calls answered<span class="kgo"><svg><use href="#r"/></svg></span></div><div class="vr"><span class="v num" id="k1"></span><span class="delta" id="d1"></span></div><svg class="spark" id="s1"></svg></button>
+          <button class="kpi glass hov" onclick="openKpi('bookings')"><div class="lb"><span class="ic" style="background:var(--green-soft);color:var(--green)"><svg><use href="#cal"/></svg></span>Bookings<span class="kgo"><svg><use href="#r"/></svg></span></div><div class="vr"><span class="v num" id="k2"></span><span class="delta" id="d2"></span></div><svg class="spark" id="s2"></svg></button>
+          <button class="kpi glass hov" onclick="openKpi('saved')"><div class="lb"><span class="ic" style="background:var(--amber-soft);color:var(--amber)"><svg><use href="#msg"/></svg></span>Missed calls saved<span class="kgo"><svg><use href="#r"/></svg></span></div><div class="vr"><span class="v num" id="k3"></span><span class="delta" id="d3"></span></div><svg class="spark" id="s3"></svg></button>
+          <button class="kpi glass hov" onclick="openKpi('rate')"><div class="lb"><span class="ic" style="background:var(--blue-soft);color:var(--blue)"><svg><use href="#spark"/></svg></span>Booking rate<span class="kgo"><svg><use href="#r"/></svg></span></div><div class="vr"><span class="v num" id="k4"></span><span class="delta" id="d4"></span></div><svg class="spark" id="s4"></svg></button>
+
+          <div class="card glass" style="grid-column:span 2">
+            <div class="ch"><h3 style="white-space:nowrap">Call volume</h3>
+              <div class="r">
+                <div class="seg" id="range"><button data-v="7">7D</button><button data-v="14" class="on">14D</button><button data-v="30">30D</button></div>
+                <button class="pp" id="pday" title="Show one day" onclick="openPicker('day', this)"><svg><use href="#cal"/></svg><span id="pdayt">Date</span><svg class="chev"><use href="#down"/></svg></button>
+                <button class="pp" id="pmonth" title="Show one month" onclick="openPicker('month', this)"><svg><use href="#clock"/></svg><span id="pmontht">Month</span><svg class="chev"><use href="#down"/></svg></button>
+              </div></div>
+            <div class="legend" style="padding:0 18px"><span><i style="background:var(--a1)"></i>Calls</span><span><i style="background:#12b886"></i>Booked</span><span class="plabel" id="plabel" style="margin-left:auto"></span></div>
+            <div class="chartbox"><svg id="chart"></svg></div>
+          </div>
+          <div class="card glass" style="grid-column:span 2">
+            <div class="ch"><h3>New bookings <span class="newtag" id="newcount">0</span></h3><div class="r"><button class="btn sm" onclick="seenAll()"><svg style="width:14px;height:14px"><use href="#check"/></svg>Mark all as seen</button></div></div>
+            <div class="lst" id="ov-new"></div>
+          </div>
+
+          <div class="card glass" style="grid-column:span 2"><div class="ch"><h3>Upcoming appointments</h3><div class="r"><span class="sub" id="upnow"></span><a class="link" href="#bookings">View all</a></div></div><div class="lst" id="ov-up"></div></div>
+          <div class="card glass"><div class="ch"><h3>Call back <span class="newtag" id="cbcount" style="background:var(--red)">0</span></h3><div class="r"><a class="link" href="#callbacks">View all</a></div></div><div class="lst" id="ov-cb"></div></div>
+          <div class="card glass"><div class="ch"><h3>Latest calls</h3><div class="r"><a class="link" href="#calls">View all</a></div></div><div class="lst" id="ov-calls"></div></div>
+        </div>
+      </section>
+
+      <!-- CALLS -->
+      <section class="page" data-page="calls" hidden>
+        <div class="filters glass">
+          <label class="search"><svg><use href="#search"/></svg><input placeholder="Search number or summary…" oninput="setFilter('calls','q',this.value)" /></label>
+          <div class="seg" data-f="calls:outcome"><button data-v="all" class="on">All</button><button data-v="booked">Booked</button><button data-v="info">Answered</button><button data-v="callback">Callback</button><button data-v="emergency">Emergency</button><button data-v="hang_up">Missed</button></div>
+          <div class="r">
+            <select class="sel" onchange="setFilter('calls','by',this.value)"><option value="all">Answered by: anyone</option><option value="ai">AI receptionist</option><option value="staff">Team member</option></select>
+            <select class="sel" onchange="setFilter('calls','days',this.value)"><option value="0">All time</option><option value="1">Today</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
+          </div>
+        </div>
+        <div class="tcard glass"><div class="tbody" id="t-calls"></div><div class="pager" id="p-calls"></div></div>
+      </section>
+
+      <!-- BOOKINGS -->
+      <section class="page" data-page="bookings" hidden>
+        <div class="filters glass">
+          <label class="search"><svg><use href="#search"/></svg><input placeholder="Search customer or phone…" oninput="setFilter('book','q',this.value)" /></label>
+          <div class="seg" data-f="book:status"><button data-v="new">New <span class="c" id="segnew">0</span></button><button data-v="upcoming" class="on">Upcoming</button><button data-v="past">Past</button><button data-v="all">All</button></div>
+          <div class="r">
+            <select class="sel" onchange="setFilter('book','source',this.value)"><option value="all">Booked via: any</option><option value="phone">AI phone call</option><option value="web">Online page</option></select>
+            <select class="sel" id="svcfilter" onchange="setFilter('book','service',this.value)"></select>
+            <button class="btn" onclick="seenAll()"><svg><use href="#check"/></svg>Mark all seen</button>
+          </div>
+        </div>
+        <div class="tcard glass"><div class="tbody" id="t-book"></div><div class="pager" id="p-book"></div></div>
+      </section>
+
+      <!-- CALLBACKS -->
+      <section class="page" data-page="callbacks" hidden>
+        <div class="filters glass">
+          <label class="search"><svg><use href="#search"/></svg><input placeholder="Search name, number or reason…" oninput="setFilter('cb','q',this.value)" /></label>
+          <div class="seg" data-f="cb:status"><button data-v="open" class="on">Open</button><button data-v="done">Done</button><button data-v="all">All</button></div>
+          <div class="r"><select class="sel" onchange="setFilter('cb','prio',this.value)"><option value="all">Priority: all</option><option value="urgent">Urgent only</option><option value="normal">Normal only</option></select></div>
+        </div>
+        <div class="tcard glass"><div class="tbody" id="t-cb"></div><div class="pager" id="p-cb"></div></div>
+      </section>
+
+      <!-- BUSINESSES -->
+      <section class="page" data-page="businesses" hidden>
+        <div class="filters glass">
+          <label class="search"><svg><use href="#search"/></svg><input id="bizq" placeholder="Search businesses…" oninput="renderBusinesses()" /></label>
+          <span class="sub" id="bizinfo" style="padding:0 6px"></span>
+          <div class="r adminonly"><button class="btn pri" onclick="newBizModal()"><svg><use href="#plus"/></svg>Add business</button></div>
+        </div>
+        <div class="bizgrid" id="bizgrid"></div>
+      </section>
+
+      <!-- TRAINING -->
+      <section class="page" data-page="training" hidden>
+        <div class="train">
+          <div class="tabs glass" id="tabs"></div>
+          <div class="form glass">
+            <div class="form-h"><h2 id="tr-title"></h2><p id="tr-sub"></p></div>
+            <div class="form-b" id="tr-body"></div>
+            <div class="form-f"><span class="msg" id="tr-msg">All changes saved</span><button class="btn" onclick="discard()">Discard</button><a class="btn" href="/phone" target="phone"><svg><use href="#phone"/></svg>Test in simulator</a><button class="btn pri" onclick="save()"><svg><use href="#check"/></svg>Save training</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="ringbox"></div>
+<div id="drawerbox"></div>
+<div id="modalbox"></div>
+<div id="panelbox"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const ic = (n, s) => `<svg${s ? ` style="width:${s}px;height:${s}px"` : ""}><use href="#${n}"/></svg>`;
+const DAY = 86400000;
+const PAGES = { overview: ["Overview", "How your AI receptionist is doing"], calls: ["Calls", "Every call, answered by your team or the AI"], bookings: ["Bookings", "Appointments from phone calls and your booking page"], callbacks: ["Callbacks", "People your team should call back"], businesses: ["Businesses", "Every business using the AI receptionist"], training: ["AI Training", "Teach the AI about this business"] };
+const LOGO = ["linear-gradient(135deg,#7c5cff,#4f8bff)", "linear-gradient(135deg,#ff7eb3,#ff758c)", "linear-gradient(135deg,#20c997,#2f7cf6)", "linear-gradient(135deg,#ffb36b,#ff7a59)", "linear-gradient(135deg,#a77bff,#e66bff)"];
+const AV = [["#ece7ff", "#5b3fd9"], ["#ffe6f1", "#c2255c"], ["#e1efff", "#1c6fd8"], ["#ddf7ee", "#0b8a63"], ["#fff1dc", "#b06200"], ["#ecedf5", "#4a4d70"]];
+let tenants = [], cur = null, D = null, range = 14, knownBookings = null, liveCalls = [], drawerId = null, ringDismiss = new Set();
+const F = { calls: { q: "", outcome: "all", by: "all", days: "0", page: 1 }, book: { q: "", status: "upcoming", source: "all", service: "all", page: 1 }, cb: { q: "", status: "open", prio: "all", page: 1 } };
+
+async function api(p, body, method) { const r = await fetch(p, body !== undefined || method ? { method: method ?? "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) } : {}); if (r.status === 401 && !p.startsWith("/api/auth")) { location.href = "/login"; throw new Error("Signed out"); } const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error("Request failed"), { data: j }); return j; }
+const tz = (iso, o) => new Date(iso).toLocaleString("en-US", { timeZone: cur.timezone, ...o });
+const dkey = (t) => tz(new Date(t).toISOString(), { year: "numeric", month: "2-digit", day: "2-digit" });
+const ago = (iso) => { const s = (Date.now() - new Date(iso)) / 1000; return s < 60 ? "just now" : s < 3600 ? `${Math.round(s / 60)}m ago` : s < 86400 ? `${Math.round(s / 3600)}h ago` : s < 7 * 86400 ? `${Math.round(s / 86400)}d ago` : tz(iso, { month: "short", day: "numeric" }); };
+const svc = (id) => cur.services.find((s) => s.id === id)?.name ?? id;
+const initials = (n) => (n ?? "?").split(/\s+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "?";
+const avatar = (n, size) => { const h = [...(n ?? "?")].reduce((a, c) => a + c.charCodeAt(0), 0); const [bg, fg] = AV[h % AV.length]; return `<span class="av" style="background:${bg};color:${fg}${size ? `;width:${size}px;height:${size}px` : ""}">${esc(initials(n))}</span>`; };
+const fmtPhone = (p) => (p && /^\+1\d{10}$/.test(p) ? `(${p.slice(2, 5)}) ${p.slice(5, 8)}-${p.slice(8)}` : p ?? "");
+const empty = (t, s) => `<div class="empty"><b>${t}</b>${s ?? ""}</div>`;
+const isNew = (b) => !b.seenAt;
+
+function toast(title, sub, icon = "check") {
+  const el = document.createElement("div");
+  el.className = "toast"; el.innerHTML = `<i>${ic(icon, 16)}</i><div><b>${esc(title)}</b><span>${esc(sub ?? "")}</span></div>`;
+  $("toasts").appendChild(el); setTimeout(() => el.remove(), 4200);
+}
+let actx;
+function chime(kind) {
+  try {
+    actx ??= new AudioContext();
+    const notes = kind === "ring" ? [[880, 0], [660, .18], [880, .36], [660, .54]] : [[660, 0], [990, .12]];
+    notes.forEach(([f, t]) => { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f; o.type = "sine"; g.gain.setValueAtTime(.0001, actx.currentTime + t); g.gain.exponentialRampToValueAtTime(.12, actx.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + t + .16); o.connect(g).connect(actx.destination); o.start(actx.currentTime + t); o.stop(actx.currentTime + t + .18); });
+  } catch {}
+}
+
+function renderMe() {
+  const role = ME.demo ? "demo" : ME.role;
+  document.body.classList.toggle("owner", ME.role !== "admin");
+  $("me").innerHTML = `<span class="pic">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}<span class="role ${role}" style="display:inline">${role}</span></b><span>${esc(ME.email)}</span></div><button class="out" title="Log out" onclick="logout()">${ic("logout", 16)}</button>`;
+  $("um-pic").textContent = initials(ME.name);
+  $("um-head").innerHTML = `<span class="pic">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)} <span class="role ${role}" style="display:inline-block;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:5px;text-transform:uppercase">${role}</span></b><span>${esc(ME.email)}</span></div>`;
+}
+function toggleUM(e) { e.stopPropagation(); $("umenu").hidden = !$("umenu").hidden; }
+document.addEventListener("click", () => { const m = document.getElementById("umenu"); if (m) m.hidden = true; });
+async function logout() { await fetch("/api/auth/logout", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); location.href = "/login"; }
+
+/* ---------- routing ---------- */
+function route() {
+  const p = PAGES[location.hash.slice(1)] ? location.hash.slice(1) : "overview";
+  document.querySelectorAll("[data-page]").forEach((s) => (s.hidden = s.dataset.page !== p));
+  document.querySelectorAll(".nav a[data-p]").forEach((a) => a.classList.toggle("on", a.dataset.p === p));
+  $("title").textContent = PAGES[p][0]; $("subtitle").textContent = PAGES[p][1];
+  if (D) renderAll();
+}
+addEventListener("hashchange", route);
+document.querySelectorAll(".seg[data-f]").forEach((seg) => seg.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const [k, f] = seg.dataset.f.split(":"); setFilter(k, f, b.dataset.v);
+}));
+function setFilter(k, f, v) {
+  F[k][f] = v; F[k].page = 1;
+  document.querySelectorAll(`.seg[data-f="${k}:${f}"] button`).forEach((x) => x.classList.toggle("on", x.dataset.v === v));
+  if (D) renderTables();
+}
+$("range").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; setPeriod({ kind: "last", days: +b.dataset.v }); });
+
+
+/* ---------- business switcher ---------- */
+function toggleBizMenu(e) { e.stopPropagation(); $("bizmenu").hidden = !$("bizmenu").hidden; }
+document.addEventListener("click", () => ($("bizmenu").hidden = true));
+function renderBizMenu() {
+  $("bizmenu").innerHTML = tenants.map((t, i) => `<button onclick="select('${t.tenantId}')"><span class="lg" style="background:${LOGO[i % LOGO.length]}">${esc(t.businessName[0])}</span>${esc(t.businessName)}${t.tenantId === cur?.tenantId ? ic("check", 14).replace("<svg", '<svg style="margin-left:auto;color:var(--acc);width:14px;height:14px"') : ""}</button>`).join("") + (ME?.role === "admin" ? `<button class="add" onclick="newBizModal()">${ic("plus", 15)}Add a new business</button>` : "");
+}
+
+let ME = null;
+async function init() {
+  try { ME = (await api("/api/auth/me")).user; } catch { location.href = "/login"; return; }
+  renderMe();
+  tenants = await api("/api/tenants");
+  if (!tenants.length) { document.body.innerHTML = "<p style='padding:40px'>No business is linked to this account.</p>"; return; }
+  route();
+  await select(localStorage.getItem("biz") && tenants.some((t) => t.tenantId === localStorage.getItem("biz")) ? localStorage.getItem("biz") : tenants[0].tenantId);
+  setInterval(refresh, 5000);
+  setInterval(pollLive, 1000);
+}
+async function select(id) {
+  cur = tenants.find((t) => t.tenantId === id);
+  try { localStorage.setItem("biz", id); } catch {}
+  const i = tenants.indexOf(cur);
+  $("b-lg").textContent = cur.businessName[0]; $("b-lg").style.background = LOGO[i % LOGO.length];
+  $("b-name").textContent = cur.businessName; $("b-ind").textContent = cur.industry;
+  $("svcfilter").innerHTML = `<option value="all">Service: all</option>` + cur.services.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  F.book.service = "all";
+  renderBizMenu();
+  knownBookings = null; draft = null; liveCalls = []; closeDrawer(); $("ringbox").innerHTML = "";
+  await refresh();
+  renderTraining();
+}
+
+/* ---------- data ---------- */
+async function refresh() {
+  if (!cur) return;
+  D = await api(`/api/dashboard/${cur.tenantId}`);
+  D.calls = D.calls.filter((c) => c.direction !== "out");
+  const ids = new Set(D.bookings.map((b) => b.id));
+  if (knownBookings) D.bookings.filter((b) => !knownBookings.has(b.id)).forEach((b) => { toast("New booking", `${b.customerName} · ${svc(b.serviceId)}`, "cal"); chime("new"); });
+  knownBookings = ids;
+  renderAll();
+}
+function renderAll() {
+  const nNew = D.bookings.filter(isNew).length;
+  const openCb = D.callbacks.filter((c) => c.status === "open");
+  $("n-new").hidden = !nNew; $("n-new").textContent = nNew;
+  $("bellc").hidden = !nNew; $("bellc").textContent = nNew;
+  $("segnew").textContent = nNew;
+  $("n-cb").hidden = !openCb.length; $("n-cb").textContent = openCb.length;
+  $("n-calls").hidden = !D.calls.length; $("n-calls").textContent = D.calls.length;
+  $("mode").hidden = !D.testMode;
+  $("bookLink").href = D.bookingLink ?? "#";
+  $("openpill").querySelector(".dot").className = "dot" + (D.isOpenNow ? "" : " night");
+  $("openpill").lastElementChild.textContent = D.isOpenNow ? "Open now" : "After hours";
+  const p = location.hash.slice(1) || "overview";
+  $("n-biz").textContent = tenants.length;
+  if (p === "overview") renderOverview(); else if (p === "businesses") loadBusinesses(); else if (p !== "training") renderTables();
+}
+
+function outcomeOf(c) {
+  if (c.direction === "out") return c.outcome === "no_answer" ? "no_answer" : "outgoing";
+  if (c.outcome === "hang_up") return "hang_up";
+  if (c.outcome === "spam") return "spam";
+  const s = (c.summary ?? "").toLowerCase();
+  if (s.includes("booked")) return "booked";
+  if (s.includes("emergency")) return "emergency";
+  if (s.includes("callback")) return "callback";
+  return "info";
+}
+const OUT = { booked: ["Booked", "green"], callback: ["Callback", "blue"], emergency: ["Emergency", "red"], info: ["Answered", "acc"], hang_up: ["Missed · texted", "amber"], spam: ["Spam", ""], outgoing: ["You called", "blue"], no_answer: ["You called · no answer", "amber"] };
+
+/* ---------- charts ---------- */
+function smooth(pts) {
+  if (pts.length < 2) return "";
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) { const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)], t = .18; d += ` C${p1[0] + (p2[0] - p0[0]) * t},${p1[1] + (p2[1] - p0[1]) * t} ${p2[0] - (p3[0] - p1[0]) * t},${p2[1] - (p3[1] - p1[1]) * t} ${p2[0]},${p2[1]}`; }
+  return d;
+}
+function series(items, get, days) { const keys = Array.from({ length: days }, (_, i) => dkey(Date.now() - (days - 1 - i) * DAY)); const m = Object.fromEntries(keys.map((k) => [k, 0])); items.forEach((x) => { const k = dkey(get(x)); if (k in m) m[k]++; }); return { keys, values: keys.map((k) => m[k]) }; }
+function spark(id, v, color) {
+  const el = $(id), w = Math.max(el.clientWidth, 100), h = 30, max = Math.max(...v, 1);
+  const pts = v.map((x, i) => [(i / (v.length - 1)) * w, h - 3 - (x / max) * (h - 7)]), line = smooth(pts);
+  el.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  el.innerHTML = `<defs><linearGradient id="g${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".25"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${line} L${w},${h} L0,${h}Z" fill="url(#g${id})"/><path d="${line}" fill="none" stroke="${color}" stroke-width="2"/>`;
+}
+function areaChart(a, b, labels) {
+  const el = $("chart"), W = Math.max(el.clientWidth, 300), H = Math.max(el.clientHeight, 120), L = 30, R = 12, T = 10, B = 24;
+  const top = Math.max(4, Math.ceil(Math.max(...a, 1) / 4) * 4);
+  const x = (i) => L + (i / (a.length - 1)) * (W - L - R), y = (v) => T + (1 - Math.max(v, 0) / top) * (H - T - B);
+  const pa = a.map((v, i) => [x(i), y(v)]), pb = b.map((v, i) => [x(i), y(v)]);
+  const TXT = `font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="600" fill="#9a9cba"`;
+  let g = "";
+  for (let k = 0; k <= 4; k++) { const v = (top / 4) * k; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(30,30,80,.07)" ${k ? 'stroke-dasharray="3 5"' : ""}/><text ${TXT} x="${L - 9}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`; }
+  const step = Math.ceil(labels.length / 7), lastI = labels.length - 1;
+  labels.forEach((l, i) => { if (i === lastI || (i % step === 0 && lastI - i >= step * .7)) g += `<text ${TXT} x="${x(i)}" y="${H - 5}" text-anchor="${i === 0 ? "start" : i === lastI ? "end" : "middle"}">${l}</text>`; });
+  el.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  el.innerHTML = `<defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7c5cff" stop-opacity=".28"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></linearGradient><linearGradient id="gb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#12b886" stop-opacity=".22"/><stop offset="1" stop-color="#12b886" stop-opacity="0"/></linearGradient><linearGradient id="la" x1="0" x2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#4f8bff"/></linearGradient></defs>${g}
+    <path d="${smooth(pa)} L${x(lastI)},${y(0)} L${x(0)},${y(0)}Z" fill="url(#ga)"/><path d="${smooth(pb)} L${x(lastI)},${y(0)} L${x(0)},${y(0)}Z" fill="url(#gb)"/>
+    <path d="${smooth(pa)}" fill="none" stroke="url(#la)" stroke-width="2.5"/><path d="${smooth(pb)}" fill="none" stroke="#12b886" stroke-width="2.2"/>
+    <circle cx="${pa[lastI][0]}" cy="${pa[lastI][1]}" r="4" fill="#fff" stroke="#4f8bff" stroke-width="2.5"/><circle cx="${pb[lastI][0]}" cy="${pb[lastI][1]}" r="4" fill="#fff" stroke="#12b886" stroke-width="2.5"/>`;
+}
+function delta(id, cur_, prev, pts) {
+  const e = $(id);
+  if (!prev && !cur_) { e.className = "delta flat"; e.textContent = "–"; return; }
+  if (!prev) { e.className = "delta up"; e.textContent = "New"; return; }
+  const d = pts ? cur_ - prev : Math.round(((cur_ - prev) / prev) * 100);
+  e.className = "delta " + (d > 0 ? "up" : d < 0 ? "down" : "flat"); e.textContent = (d > 0 ? "↑ " : d < 0 ? "↓ " : "") + Math.abs(d) + (pts ? " pts" : "%");
+}
+
+/* ---------- period: last 7/14/30 days, one date, or one month ---------- */
+let period = { kind: "last", days: 14 };
+const HR = 3600000;
+function tzOff(ms) { const d = new Date(ms); return Date.parse(d.toLocaleString("en-US", { timeZone: cur.timezone })) - Date.parse(d.toLocaleString("en-US", { timeZone: "UTC" })); }
+function mid(y, m, d) { const g = Date.UTC(y, m - 1, d); return g - tzOff(g); }
+function bounds() {
+  const fmt = (ms, o) => new Date(ms).toLocaleString("en-US", { timeZone: cur.timezone, ...o });
+  if (period.kind === "day") {
+    const [y, m, d] = period.date.split("-").map(Number), s = mid(y, m, d), e = mid(y, m, d + 1);
+    const hl = (i) => (i === 0 ? "12 AM" : i < 12 ? i + " AM" : i === 12 ? "12 PM" : i - 12 + " PM");
+    return { s, e, ps: mid(y, m, d - 1), pe: s, label: fmt(s + 12 * HR, { weekday: "long", month: "long", day: "numeric" }), cmp: "vs previous day",
+      buckets: Array.from({ length: 24 }, (_, i) => ({ s: s + i * HR, e: s + (i + 1) * HR, label: hl(i) })) };
+  }
+  if (period.kind === "month") {
+    const [y, m] = period.ym.split("-").map(Number), s = mid(y, m, 1), e = mid(y, m + 1, 1), n = Math.round((e - s) / DAY);
+    return { s, e, ps: mid(y, m - 1, 1), pe: s, label: fmt(s + 15 * DAY, { month: "long", year: "numeric" }), cmp: "vs previous month",
+      buckets: Array.from({ length: n }, (_, i) => ({ s: mid(y, m, i + 1), e: mid(y, m, i + 2), label: fmt(mid(y, m, i + 1) + 12 * HR, { month: "short", day: "numeric" }) })) };
+  }
+  const [y, m, d] = new Date().toLocaleDateString("en-CA", { timeZone: cur.timezone }).split("-").map(Number);
+  const n = period.days, s = mid(y, m, d - n + 1), e = mid(y, m, d + 1);
+  return { s, e, ps: mid(y, m, d - 2 * n + 1), pe: s, label: "Last " + n + " days", cmp: "vs the " + n + " days before",
+    buckets: Array.from({ length: n }, (_, i) => ({ s: mid(y, m, d - n + 1 + i), e: mid(y, m, d - n + 2 + i), label: fmt(mid(y, m, d - n + 1 + i) + 12 * HR, { month: "short", day: "numeric" }) })) };
+}
+/* ---------- glass date / month picker ---------- */
+let PK = null; // { kind, y, m, btn }
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const iso = (y, m, d) => y + "-" + String(m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+const todayIso = () => { const t = new Date(); return iso(t.getFullYear(), t.getMonth(), t.getDate()); };
+function callDays() { const s = new Set(); (D?.calls || []).forEach((c) => { const t = new Date(c.createdAt); s.add(iso(t.getFullYear(), t.getMonth(), t.getDate())); }); return s; }
+function openPicker(kind, btn) {
+  if (PK && PK.kind === kind) return closePicker();
+  closePicker();
+  const now = new Date();
+  const base = kind === "day" && period.kind === "day" ? new Date(period.date + "T12:00") : kind === "month" && period.kind === "month" ? new Date(period.ym + "-15T12:00") : now;
+  PK = { kind, y: base.getFullYear(), m: base.getMonth(), btn };
+  btn.classList.add("open");
+  renderPicker();
+  setTimeout(() => addEventListener("mousedown", pickOutside), 0);
+  addEventListener("resize", placePicker); addEventListener("scroll", placePicker, true);
+}
+function pickOutside(e) { if (!e.target.closest(".pick") && !e.target.closest(".pp.open")) closePicker(); }
+function closePicker() {
+  if (!PK) return;
+  PK.btn.classList.remove("open"); $("pickbox")?.remove(); PK = null;
+  removeEventListener("mousedown", pickOutside); removeEventListener("resize", placePicker); removeEventListener("scroll", placePicker, true);
+}
+function pickNav(step) { if (PK.kind === "day") { PK.m += step; if (PK.m < 0) { PK.m = 11; PK.y--; } if (PK.m > 11) { PK.m = 0; PK.y++; } } else PK.y += step; renderPicker(); }
+function pickSet(p) { closePicker(); setPeriod(p); }
+function renderPicker() {
+  const now = new Date(), ty = now.getFullYear(), tm = now.getMonth(), days = callDays();
+  let html;
+  if (PK.kind === "day") {
+    const first = new Date(PK.y, PK.m, 1), start = (first.getDay() + 6) % 7, inMonth = new Date(PK.y, PK.m + 1, 0).getDate(), prevLen = new Date(PK.y, PK.m, 0).getDate();
+    const sel = period.kind === "day" ? period.date : null, today = todayIso();
+    let cells = "";
+    const total = Math.ceil((start + inMonth) / 7) * 7;
+    for (let i = 0; i < total; i++) {
+      const d = i - start + 1;
+      const [y, m, dd, dim] = d < 1 ? [PK.m === 0 ? PK.y - 1 : PK.y, (PK.m + 11) % 12, prevLen + d, true] : d > inMonth ? [PK.m === 11 ? PK.y + 1 : PK.y, (PK.m + 1) % 12, d - inMonth, true] : [PK.y, PK.m, d, false];
+      const k = iso(y, m, dd), future = k > today;
+      cells += '<button class="' + (dim ? "dim " : "") + (k === today ? "today " : "") + (k === sel ? "sel" : "") + '"' + (future ? " disabled" : "") + ' onclick="pickSet({ kind: \'day\', date: \'' + k + '\' })">' + dd + (days.has(k) && !future ? "<i></i>" : "") + "</button>";
+    }
+    const atNow = PK.y === ty && PK.m === tm;
+    const yest = new Date(Date.now() - 86400000);
+    html = '<div class="pick-h"><b>' + new Date(PK.y, PK.m, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }) + '</b><button onclick="pickNav(-1)" title="Previous month">' + ic("l") + '</button><button onclick="pickNav(1)" title="Next month"' + (atNow ? " disabled" : "") + ">" + ic("r") + "</button></div>" +
+      '<div class="pick-w">' + ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((w) => "<span>" + w + "</span>").join("") + "</div>" +
+      '<div class="pick-g">' + cells + "</div>" +
+      '<div class="pick-n"><i></i>Days with calls</div>' +
+      '<div class="pick-f"><button onclick="pickSet({ kind: \'day\', date: todayIso() })">Today</button><button onclick="pickSet({ kind: \'day\', date: \'' + iso(yest.getFullYear(), yest.getMonth(), yest.getDate()) + '\' })">Yesterday</button><button class="clr" onclick="pickSet({ kind: \'last\', days: 14 })">Clear</button></div>';
+  } else {
+    const months = new Set([...days].map((d) => d.slice(0, 7))), sel = period.kind === "month" ? period.ym : null;
+    html = '<div class="pick-h"><b>' + PK.y + '</b><button onclick="pickNav(-1)" title="Previous year">' + ic("l") + '</button><button onclick="pickNav(1)" title="Next year"' + (PK.y >= ty ? " disabled" : "") + ">" + ic("r") + "</button></div>" +
+      '<div class="pick-g">' + MON.map((n, i) => { const k = PK.y + "-" + String(i + 1).padStart(2, "0"), future = PK.y > ty || (PK.y === ty && i > tm); return '<button class="' + (PK.y === ty && i === tm ? "today " : "") + (k === sel ? "sel" : "") + '"' + (future ? " disabled" : "") + ' onclick="pickSet({ kind: \'month\', ym: \'' + k + '\' })">' + n + (months.has(k) && !future ? "<i></i>" : "") + "</button>"; }).join("") + "</div>" +
+      '<div class="pick-n"><i></i>Months with calls</div>' +
+      '<div class="pick-f"><button onclick="pickSet({ kind: \'month\', ym: \'' + ty + "-" + String(tm + 1).padStart(2, "0") + '\' })">This month</button><button onclick="pickSet({ kind: \'month\', ym: \'' + (tm === 0 ? ty - 1 : ty) + "-" + String(((tm + 11) % 12) + 1).padStart(2, "0") + '\' })">Last month</button><button class="clr" onclick="pickSet({ kind: \'last\', days: 14 })">Clear</button></div>';
+  }
+  let box = $("pickbox");
+  if (!box) { box = document.createElement("div"); box.id = "pickbox"; document.body.appendChild(box); }
+  box.className = "pick" + (PK.kind === "month" ? " m" : "");
+  box.innerHTML = html;
+  placePicker();
+}
+// Keep the picker under its button (also while the page scrolls).
+function placePicker() {
+  const box = $("pickbox"); if (!PK || !box) return;
+  const r = PK.btn.getBoundingClientRect(), w = box.offsetWidth;
+  box.style.top = Math.min(r.bottom + 8, innerHeight - box.offsetHeight - 10) + "px";
+  box.style.left = Math.max(10, Math.min(r.right - w, innerWidth - w - 10)) + "px";
+}
+
+function setPeriod(p) {
+  period = p;
+  $("range").querySelectorAll("button").forEach((x) => x.classList.toggle("on", p.kind === "last" && +x.dataset.v === p.days));
+  $("pday").classList.toggle("on", p.kind === "day"); $("pmonth").classList.toggle("on", p.kind === "month");
+  $("pdayt").textContent = p.kind === "day" ? new Date(p.date + "T12:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date";
+  $("pmontht").textContent = p.kind === "month" ? new Date(p.ym + "-15T12:00").toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Month";
+  renderOverview();
+}
+const inFmt = (ms) => { if (ms <= 0) return "now"; const m = Math.round(ms / 60000); if (m < 60) return "in " + m + "m"; const h = Math.floor(m / 60); if (h < 24) return "in " + h + "h" + (m % 60 ? " " + (m % 60) + "m" : ""); const d = Math.floor(h / 24); return "in " + d + "d" + (h % 24 ? " " + (h % 24) + "h" : ""); };
+const callIcon = (c) => c.callerName ? avatar(c.callerName) : '<span class="av" style="background:rgba(30,30,80,.06);color:var(--ink-2)">' + ic(outcomeOf(c) === "hang_up" ? "off" : "phone", 15) + "</span>";
+const srcTag = (b) => '<span class="tag">' + (b.source === "web" ? ic("globe") + "Online" : ic("phone") + "AI call") + "</span>";
+
+/* ---------- overview ---------- */
+function fit(el, rowH) { return Math.max(1, Math.floor((el.clientHeight - 4) / rowH)); }
+function renderOverview() {
+  const B = bounds(), now = Date.now();
+  const inB = (x, s, e) => { const v = Date.parse(x.createdAt); return v >= s && v < e; };
+  const cnt = (arr, s, e) => arr.filter((x) => inB(x, s, e)).length;
+  const answered = D.calls.filter((c) => c.outcome === "conversation"), hang = D.calls.filter((c) => c.outcome === "hang_up"), books = D.bookings.filter((b) => b.status === "booked"), booked = D.calls.filter((c) => outcomeOf(c) === "booked");
+  const c1 = cnt(answered, B.s, B.e), p1 = cnt(answered, B.ps, B.pe), c2 = cnt(books, B.s, B.e), p2 = cnt(books, B.ps, B.pe), c3 = cnt(hang, B.s, B.e), p3 = cnt(hang, B.ps, B.pe);
+  const rate = c1 ? Math.round((cnt(booked, B.s, B.e) / c1) * 100) : 0, prate = p1 ? Math.round((cnt(booked, B.ps, B.pe) / p1) * 100) : 0;
+  $("k1").textContent = c1; delta("d1", c1, p1); $("k2").textContent = c2; delta("d2", c2, p2); $("k3").textContent = c3; delta("d3", c3, p3); $("k4").textContent = rate + "%"; delta("d4", rate, prate, true);
+  ["d1", "d2", "d3", "d4"].forEach((id) => ($(id).title = B.cmp));
+  const ser = (arr) => B.buckets.map((b) => cnt(arr, b.s, b.e));
+  const sc = ser(answered);
+  spark("s1", sc, "#7c5cff"); spark("s2", ser(books), "#12b886"); spark("s3", ser(hang), "#f59f00");
+  spark("s4", ser(booked).map((v, i) => (sc[i] ? v / sc[i] : 0)), "#2f7cf6");
+  const all = ser(D.calls);
+  areaChart(all, ser(booked), B.buckets.map((b) => b.label));
+  $("plabel").textContent = B.label + " · " + all.reduce((a, b) => a + b, 0) + " calls";
+
+  // New bookings: the 5 newest, each clickable
+  const newB = D.bookings.filter(isNew).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  $("newcount").textContent = newB.length;
+  const nN = Math.min(5, fit($("ov-new"), 58));
+  $("ov-new").innerHTML = newB.length ? newB.slice(0, nN).map((b) =>
+    '<div class="nb" onclick="openBooking(\'' + b.id + '\')">' + avatar(b.customerName) +
+    '<div class="tx"><b><span class="dotnew"></span>' + esc(b.customerName) + "</b><span>" + esc(svc(b.serviceId)) + " · " + tz(b.start, { weekday: "short", month: "short", day: "numeric" }) + " · " + tz(b.start, { hour: "numeric", minute: "2-digit" }) + "</span></div>" +
+    '<div class="meta">' + srcTag(b) + '<span class="sub" style="font-size:11px">' + ago(b.createdAt) + "</span></div>" +
+    '<button class="ckb" title="Mark as seen" onclick="event.stopPropagation();seen(\'' + b.id + '\')">' + ic("check") + "</button></div>").join("") +
+    (newB.length > nN ? '<a class="more" href="#bookings" onclick="setFilter(\'book\',\'status\',\'new\')">+ ' + (newB.length - nN) + " more new bookings →</a>" : "")
+    : empty("No new bookings", "You've seen everything. New bookings will show up here.");
+
+  // Upcoming: a timeline, next one highlighted with a countdown
+  const up = D.bookings.filter((b) => b.status === "booked" && Date.parse(b.end) > now).sort((a, b) => a.start.localeCompare(b.start));
+  $("upnow").textContent = up.length ? up.filter((b) => dkey(b.start) === dkey(now)).length + " today" : "";
+  const maxN = Math.max(2, fit($("ov-up"), 47) - 1);
+  let html = "", lastDay = "";
+  up.slice(0, maxN).forEach((b, i) => {
+    const dk = dkey(b.start), dl = dk === dkey(now) ? "Today" : dk === dkey(now + DAY) ? "Tomorrow" : tz(b.start, { weekday: "long", month: "short", day: "numeric" });
+    if (dl !== lastDay) { html += '<div class="uday">' + dl + "</div>"; lastDay = dl; }
+    const [hm, ap] = tz(b.start, { hour: "numeric", minute: "2-digit" }).split(" "), ms = Date.parse(b.start) - now;
+    html += '<div class="uit ' + (i === 0 ? "next" : "") + '" onclick="openBooking(\'' + b.id + '\')"><div class="tm">' + hm + "<small>" + ap + '</small></div><span class="dot"></span><div class="bd"><b>' + esc(b.customerName) + (isNew(b) ? ' <span class="newtag">NEW</span>' : "") + "</b><span>" + esc(svc(b.serviceId)) + (b.address ? " · " + esc(b.address) : "") + "</span></div>" +
+      (i === 0 ? '<span class="nextup">' + (ms <= 0 ? "Happening now" : "Next · " + inFmt(ms)) + "</span>" : '<span class="soon">' + inFmt(ms) + "</span>") + "</div>";
+  });
+  $("ov-up").innerHTML = up.length ? html : empty("No upcoming appointments", "New bookings from calls and your booking page show here.");
+
+  // Call back: clickable, urgent first
+  const cb = D.callbacks.filter((c) => c.status === "open").sort((a, b) => b.urgent - a.urgent || b.createdAt.localeCompare(a.createdAt));
+  $("cbcount").textContent = cb.length; $("cbcount").hidden = !cb.length;
+  $("ov-cb").innerHTML = cb.length ? cb.slice(0, fit($("ov-cb"), 52)).map((c) => '<div class="li go" onclick="openCallback(\'' + c.id + '\')">' + avatar(c.callerName) + '<div class="tx"><b>' + esc(c.callerName ?? "Unknown") + (c.urgent ? ' <span class="tag red" style="height:19px;margin-left:3px">Urgent</span>' : "") + "</b><span>" + esc(c.reason.replace("EMERGENCY: ", "Emergency: ")) + '</span></div><button class="ckb" title="Mark done" onclick="event.stopPropagation();done(\'' + c.id + '\')">' + ic("check") + "</button></div>").join("") : empty("All caught up", "No one is waiting");
+
+  // Latest calls: name first, clickable
+  $("ov-calls").innerHTML = D.calls.length ? D.calls.slice(0, fit($("ov-calls"), 52)).map((c) => { const o = outcomeOf(c); return '<div class="li go" onclick="openCall(\'' + c.callId + '\')">' + callIcon(c) + '<div class="tx"><b>' + esc(c.callerName ?? fmtPhone(c.from) ?? "Unknown") + "</b><span>" + (c.callerName ? esc(fmtPhone(c.from)) + " · " : "") + ago(c.createdAt) + '</span></div><span class="tag ' + OUT[o][1] + '">' + OUT[o][0] + "</span></div>"; }).join("") : empty("No calls yet");
+}
+
+/* ---------- KPI pop-up: the full list behind a number, 10 per page ---------- */
+let M = null;
+function openKpi(k) {
+  const B = bounds(), inB = (x) => { const v = Date.parse(x.createdAt); return v >= B.s && v < B.e; };
+  const answered = D.calls.filter((c) => c.outcome === "conversation" && inB(c));
+  const bookedCalls = D.calls.filter((c) => outcomeOf(c) === "booked" && inB(c));
+  const defs = {
+    calls: { title: "Calls answered", icon: "phone", col: "acc", kind: "call", rows: answered, sub: answered.length + " calls answered by your team or the AI" },
+    bookings: { title: "Bookings", icon: "cal", col: "green", kind: "booking", rows: D.bookings.filter((b) => b.status === "booked" && inB(b)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), sub: "Appointments booked by phone or online" },
+    saved: { title: "Missed calls saved", icon: "msg", col: "amber", kind: "call", rows: D.calls.filter((c) => c.outcome === "hang_up" && inB(c)), sub: "Callers who hung up and got a “Sorry we missed you” text" },
+    rate: { title: "Booking rate", icon: "spark", col: "blue", kind: "call", rows: bookedCalls, sub: bookedCalls.length + " of " + answered.length + " answered calls ended in a booking (" + (answered.length ? Math.round((bookedCalls.length / answered.length) * 100) : 0) + "%)" },
+  };
+  M = Object.assign({}, defs[k], { page: 1, q: "", label: B.label });
+  $("modalbox").innerHTML = '<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal wide"><div class="modal-h" style="display:flex;gap:12px;align-items:center"><span class="mic" style="background:var(--' + M.col + '-soft);color:var(--' + M.col + ')">' + ic(M.icon) + '</span><div style="flex:1;min-width:0"><h2>' + M.title + "</h2><p>" + esc(M.sub) + " · " + esc(M.label) + '</p></div><button class="x" onclick="closeModal()">' + ic("x") + '</button></div><div class="mtop"><label class="search"><svg><use href="#search"/></svg><input placeholder="Search name, number or service…" oninput="M.q=this.value;M.page=1;renderModal()" /></label></div><div class="mlist" id="mlist"></div><div class="pager" id="mpager"></div></div></div>';
+  renderModal();
+}
+function closeModal() { $("modalbox").innerHTML = ""; M = null; }
+function renderModal() {
+  const q = M.q.toLowerCase();
+  const rows = M.rows.filter((r) => !q || [r.customerName, r.callerName, r.from, fmtPhone(r.from), r.customerPhone, fmtPhone(r.customerPhone), r.summary, r.serviceId && svc(r.serviceId)].join(" ").toLowerCase().includes(q));
+  const pages = Math.max(1, Math.ceil(rows.length / 10)); M.page = Math.min(M.page, pages); const st = (M.page - 1) * 10;
+  const row = (r) => {
+    if (M.kind === "booking") return '<div class="mrow" onclick="openBooking(\'' + r.id + '\')">' + avatar(r.customerName) + '<div class="tx"><b>' + esc(r.customerName) + (isNew(r) ? ' <span class="newtag">NEW</span>' : "") + "</b><span>" + esc(svc(r.serviceId)) + " · " + tz(r.start, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + "</span></div>" + srcTag(r) + '<span class="sub" style="width:84px;text-align:right">' + ago(r.createdAt) + "</span></div>";
+    const o = outcomeOf(r);
+    return '<div class="mrow" onclick="openCall(\'' + r.callId + '\')">' + callIcon(r) + '<div class="tx"><b>' + esc(r.callerName ?? fmtPhone(r.from)) + "</b><span>" + esc(r.summary ?? "") + '</span></div><span class="tag ' + OUT[o][1] + '">' + OUT[o][0] + '</span><span class="sub" style="width:84px;text-align:right">' + ago(r.createdAt) + "</span></div>";
+  };
+  $("mlist").innerHTML = rows.length ? rows.slice(st, st + 10).map(row).join("") : empty("Nothing here", "Try another date range on the Call volume chart.");
+  const nums = []; for (let i = 1; i <= pages; i++) if (i === 1 || i === pages || Math.abs(i - M.page) <= 1) nums.push(i); else if (nums[nums.length - 1] !== "…") nums.push("…");
+  $("mpager").innerHTML = '<span class="info">Showing ' + (rows.length ? st + 1 : 0) + "–" + Math.min(st + 10, rows.length) + " of " + rows.length + '</span><button ' + (M.page <= 1 ? "disabled" : "") + ' onclick="M.page--;renderModal()">' + ic("l", 15) + "</button>" + nums.map((n) => n === "…" ? '<span class="gap">…</span>' : '<button class="' + (n === M.page ? "on" : "") + '" onclick="M.page=' + n + ';renderModal()">' + n + "</button>").join("") + "<button " + (M.page >= pages ? "disabled" : "") + ' onclick="M.page++;renderModal()">' + ic("r", 15) + "</button>";
+}
+
+/* ---------- detail panel: booking / call / callback, with messages, timeline and history ---------- */
+let P = null;
+function closePanel() {
+  const p = document.querySelector(".panel"); P = null;
+  if (!p) return;
+  p.classList.add("out"); document.querySelector(".scrim")?.remove();
+  setTimeout(() => { if (!P) $("panelbox").innerHTML = ""; }, 220);
+}
+async function openPanel(type, id, phone, tab) {
+  document.querySelectorAll(".mrow").forEach((r) => r.classList.toggle("sel", r.getAttribute("onclick")?.includes(id)));
+  const keep = P && P.id === id ? P.data : null; // keep showing the old data while refreshing
+  P = { type, id, phone, tab: tab || "details", data: keep };
+  if (!document.querySelector(".panel")) $("panelbox").innerHTML = '<div class="scrim" onclick="closePanel()"></div><div class="panel"><div class="pbody">' + empty("Loading…") + "</div></div>";
+  let data = null;
+  if (phone) { try { data = await api("/api/customer/" + cur.tenantId + "?phone=" + encodeURIComponent(phone)); } catch {} }
+  if (!P || P.id !== id) return;
+  P.data = data || { name: null, bookings: [], calls: [], callbacks: [], messages: [], timeline: [] };
+  renderPanel();
+}
+function openBooking(id) { const b = D.bookings.find((x) => x.id === id) || P?.data?.bookings.find((x) => x.id === id); if (b) openPanel("booking", id, b.customerPhone); }
+// Only a real phone number can be texted or called back ("Browser test call" is not one).
+function openCall(id) { const c = D.calls.find((x) => x.callId === id) || P?.data?.calls.find((x) => x.callId === id); if (c) openPanel("call", id, (c.from || "").replace(/\D/g, "").length >= 7 ? c.from : undefined); }
+function openCallback(id) { const c = D.callbacks.find((x) => x.id === id) || P?.data?.callbacks.find((x) => x.id === id); if (c) openPanel("callback", id, c.callerPhone); }
+const near = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) < 60 * 60000;
+// The call that made a booking: linked by callId when the call was saved; older bookings: same customer, around the same time.
+const relatedCall = (b, d) => (b.callId && (D.calls.find((c) => c.callId === b.callId) || d.calls.find((c) => c.callId === b.callId)))
+  || d.calls.find((c) => c.outcome === "conversation" && near(c.createdAt, b.createdAt));
+const relatedBooking = (c, d) => d.bookings.find((b) => near(b.createdAt, c.createdAt));
+const lenFmt = (m) => (m < 1 ? Math.round(m * 60) + " sec" : Math.floor(m) + " min " + Math.round((m % 1) * 60) + " sec");
+const when = (iso) => tz(iso, { weekday: "short", month: "short", day: "numeric" }) + " · " + tz(iso, { hour: "numeric", minute: "2-digit" });
+const TLI = { call: ["phone", "acc"], booking: ["cal", "green"], seen: ["check", "blue"], callback: ["back", "blue"], urgent: ["alert", "red"], msg_out: ["msg", "acc"], msg_in: ["msg", "green"], done: ["check", "green"], priority: ["alert", "amber"], call_out: ["phone", "green"] };
+
+function renderPanel() {
+  if (!P || !P.data) return;
+  const d = P.data, phone = P.phone;
+  const item = P.type === "booking" ? (D.bookings.find((x) => x.id === P.id) || d.bookings.find((x) => x.id === P.id))
+    : P.type === "call" ? (D.calls.find((x) => x.callId === P.id) || d.calls.find((x) => x.callId === P.id))
+    : (D.callbacks.find((x) => x.id === P.id) || d.callbacks.find((x) => x.id === P.id));
+  if (!item) return closePanel();
+  const name = d.name || item.customerName || item.callerName || null;
+  const first = (name || "the customer").split(" ")[0];
+  let tags = '<span class="tag acc">' + { booking: "Booking", call: "Call", callback: "Callback request" }[P.type] + "</span>";
+  let act = "", body = "";
+  const msgBtn = phone ? '<button class="btn sm" onclick="P.tab=\'messages\';renderPanel()">' + ic("msg", 14) + "Message</button>" : "";
+  // Calls the customer: it rings on their phone (the phone simulator in test mode).
+  const tel = (cbId) => phone ? '<button class="btn sm green" onclick="callOut(P.phone, P.callName, \'' + (cbId || "") + '\')">' + ic("phone", 14) + "Call " + esc(first) + "</button>" : "";
+  P.callName = name;
+
+  if (P.type === "booking") {
+    tags += (isNew(item) ? '<span class="newtag">NEW</span>' : '<span class="tag blue">Seen</span>') + (Date.parse(item.end) > Date.now() ? '<span class="tag green">Confirmed</span>' : '<span class="tag">Completed</span>') + srcTag(item);
+    act = (isNew(item) ? '<button class="btn sm pri" onclick="seenFromPanel(\'' + item.id + '\')">' + ic("check", 14) + "Mark as seen</button>" : "") + msgBtn + tel();
+    const rc = relatedCall(item, d), so = cur.services.find((s) => s.id === item.serviceId);
+    body = '<div class="kvg"><div><span>Service</span><b>' + esc(svc(item.serviceId)) + "</b></div><div><span>Appointment</span><b>" + when(item.start) + "</b></div><div><span>Length</span><b>" + (so ? so.appointmentMinutes + " min" : "–") + "</b></div><div><span>Booked via</span><b>" + (item.source === "web" ? "Online booking page" : "AI phone call") + "</b></div><div><span>Booked</span><b>" + when(item.createdAt) + "</b></div><div><span>Seen by owner</span><b>" + (item.seenAt ? ago(item.seenAt) : "Not yet") + '</b></div><div style="grid-column:span 2"><span>Address</span><b>' + esc(item.address || "Not given") + "</b></div></div>" +
+      (item.notes ? '<div class="box"><b>Notes</b>' + esc(item.notes) + "</div>" : "") +
+      (rc ? '<div class="box"><b>Call summary: what was said on the call</b>' + esc(rc.summary || "No summary for this call.") + '<div style="margin-top:8px"><button class="btn sm" onclick="openCall(\'' + rc.callId + '\')">' + ic("phone", 14) + "Open full call</button></div></div>"
+        : item.source !== "web" && Date.now() - Date.parse(item.createdAt) < 10 * 60000 ? '<div class="box tip"><b>Call summary</b>The call is still going on or just ended. Its summary shows here about a minute after the call ends.</div>' : "");
+  } else if (P.type === "call") {
+    const o = outcomeOf(item), rb = relatedBooking(item, d);
+    tags += '<span class="tag ' + OUT[o][1] + '">' + OUT[o][0] + "</span>" + (item.handledBy ? '<span class="tag">' + (item.handledBy === "staff" ? "Answered by your team" : "Answered by the AI") + "</span>" : "");
+    act = msgBtn + tel() + (rb ? '<button class="btn sm" onclick="openBooking(\'' + rb.id + '\')">' + ic("cal", 14) + "View booking</button>" : "");
+    // Our calls save "caller:/ai:/staff:" lines; Bland saves "user:/assistant:" lines (its tool steps are skipped).
+    const WHO = { caller: "caller", user: "caller", ai: "ai", assistant: "ai", agent: "ai", staff: "staff" };
+    const lines = (item.transcript || "").split("\n").map((l) => { const m = l.trim().match(/^([a-z-]+):\s?(.*)$/i); const from = m && WHO[m[1].toLowerCase()]; return from && m[2].trim() ? { from, text: m[2].trim() } : null; }).filter(Boolean);
+    body = '<div class="kvg"><div><span>Result</span><b>' + OUT[o][0] + "</b></div><div><span>Answered by</span><b>" + (item.handledBy === "staff" ? "Your team" : item.handledBy === "ai" ? "AI receptionist" : "No one (missed)") + "</b></div><div><span>Length</span><b>" + lenFmt(item.lengthMinutes) + "</b></div><div><span>When</span><b>" + when(item.createdAt) + "</b></div></div>" +
+      '<div class="box"><b>Summary</b>' + esc(item.summary || "–") + "</div>" +
+      '<div class="hsec">Conversation</div>' + (lines.length ? '<div class="thread">' + lines.map((m) => '<div class="tb ' + (m.from === "caller" ? "in" : "out") + '">' + esc(m.text) + "<small>" + (m.from === "caller" ? "Caller" : m.from === "ai" ? "AI receptionist" : "Your team") + "</small></div>").join("") + "</div>" : '<div class="box">The word-by-word conversation is saved for calls made from now on. Demo calls only have a summary.</div>');
+  } else {
+    tags += (item.urgent ? '<span class="tag red">Urgent</span>' : '<span class="tag">Normal priority</span>') + (item.status === "done" ? '<span class="tag green">Done</span>' : '<span class="tag amber">Waiting for call back</span>');
+    act = '<div class="prio"><button class="u ' + (item.urgent ? "on" : "") + '" onclick="setPrio(\'' + item.id + '\',true)">Urgent</button><button class="n ' + (!item.urgent ? "on" : "") + '" onclick="setPrio(\'' + item.id + '\',false)">Normal</button></div>' + tel(item.id) + msgBtn + (item.status === "open" ? '<button class="btn sm green" onclick="doneFromPanel(\'' + item.id + '\')">' + ic("check", 14) + "Mark done</button>" : "");
+    body = '<div class="kvg"><div style="grid-column:span 2"><span>Reason</span><b>' + esc(item.reason.replace("EMERGENCY: ", "Emergency: ")) + "</b></div><div><span>Priority</span><b>" + (item.urgent ? "Urgent" : "Normal") + "</b></div><div><span>Status</span><b>" + (item.status === "done" ? "Done" : "Waiting") + "</b></div><div><span>Requested</span><b>" + when(item.createdAt) + "</b></div><div><span>Phone</span><b>" + esc(fmtPhone(phone) || "Not given") + "</b></div></div>" +
+      (item.notes ? '<div class="box"><b>Notes</b>' + esc(item.notes) + "</div>" : "") +
+      '<div class="box tip"><b>How "urgent" is set</b>The AI asks the caller: “Is this urgent, or can it wait until our normal business hours?” Emergencies are always urgent. You can change it with the Urgent / Normal switch above.</div>';
+  }
+
+  if (P.tab === "messages") {
+    const lbl = (m) => m.direction === "in" ? first + " · " + ago(m.at) : (m.kind === "staff_message" ? (m.by || "Team") : m.kind === "booking_confirmation" ? "Booking confirmation" : m.kind === "missed_call_text_back" ? "Missed-call text" : "Automatic") + " · " + ago(m.at);
+    body = (D.testMode ? '<div class="box tip" style="text-align:center">Test mode: texts show on the phone simulator (open it and tap <b style="display:inline;color:inherit;text-transform:none;letter-spacing:0">Messages</b>), not on real phones.</div>' : "") +
+      (d.messages.length ? '<div class="thread">' + d.messages.map((m) => '<div class="tb ' + m.direction + '">' + esc(m.body) + "<small>" + esc(lbl(m)) + "</small></div>").join("") + "</div>" : empty("No messages yet", phone ? "Send " + first + " a text below." : "No phone number for this customer."));
+  } else if (P.tab === "timeline") {
+    body = d.timeline.length ? '<div class="ptl">' + d.timeline.map((s, i) => { const [icn, col] = TLI[s.kind] || ["clock", "acc"]; return '<div class="st" style="animation-delay:' + Math.min(i * 30, 400) + 'ms"><span class="ico" style="background:var(--' + col + '-soft);color:var(--' + col + ')">' + ic(icn) + "</span><div><b>" + esc(s.title) + "</b>" + (s.detail ? "<p>" + esc(s.detail) + "</p>" : "") + "<time>" + when(s.at) + "</time></div></div>"; }).join("") + "</div>" : empty("No history yet");
+  } else if (P.tab === "history") {
+    const sec = (title, rows) => rows.length ? '<div class="hsec">' + title + "</div>" + rows.join("") : "";
+    body = sec("Bookings", d.bookings.slice().sort((a, b) => b.start.localeCompare(a.start)).map((b) => '<div class="hrow" onclick="openBooking(\'' + b.id + '\')"><span class="mic" style="width:34px;height:34px;border-radius:11px;background:var(--green-soft);color:var(--green)">' + ic("cal", 15) + '</span><div class="tx"><b>' + esc(svc(b.serviceId)) + "</b><span>" + when(b.start) + "</span></div>" + srcTag(b) + "</div>")) +
+      sec("Calls", d.calls.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((c) => { const o = outcomeOf(c); return '<div class="hrow" onclick="openCall(\'' + c.callId + '\')"><span class="mic" style="width:34px;height:34px;border-radius:11px;background:var(--acc-soft);color:var(--acc)">' + ic("phone", 15) + '</span><div class="tx"><b>' + when(c.createdAt) + "</b><span>" + esc(c.summary || "") + '</span></div><span class="tag ' + OUT[o][1] + '">' + OUT[o][0] + "</span></div>"; })) +
+      sec("Callback requests", d.callbacks.map((c) => '<div class="hrow" onclick="openCallback(\'' + c.id + '\')"><span class="mic" style="width:34px;height:34px;border-radius:11px;background:var(--' + (c.urgent ? "red" : "blue") + "-soft);color:var(--" + (c.urgent ? "red" : "blue") + ')">' + ic("back", 15) + '</span><div class="tx"><b>' + esc(c.reason.replace("EMERGENCY: ", "Emergency: ")) + "</b><span>" + when(c.createdAt) + "</span></div>" + (c.status === "done" ? '<span class="tag green">Done</span>' : '<span class="tag amber">Open</span>') + "</div>"));
+    if (!body) body = empty("No history yet");
+  }
+
+  const tabs = [["details", "Details"], ["messages", "Messages", d.messages.length], ["timeline", "Timeline", d.timeline.length], ["history", "History", d.bookings.length + d.calls.length + d.callbacks.length]];
+  const html = '<div class="ph"><div class="ph-top">' + avatar(name || "?") + "<div><h2>" + esc(name || fmtPhone(phone) || item.from || "Unknown caller") + '</h2><div class="sub2 num">' + esc(fmtPhone(phone) || "No phone number") + '</div></div><button class="x" onclick="closePanel()">' + ic("x") + '</button></div><div class="ph-tags">' + tags + '</div><div class="ph-stats"><div><b>' + d.calls.length + "</b><span>Calls</span></div><div><b>" + d.bookings.length + "</b><span>Bookings</span></div><div><b>" + d.callbacks.length + '</b><span>Callbacks</span></div></div><div class="ph-act">' + act + "</div></div>" +
+    '<div class="ptabs">' + tabs.map(([k, l, c]) => '<button class="' + (P.tab === k ? "on" : "") + '" onclick="P.tab=\'' + k + '\';renderPanel()">' + l + (c !== undefined ? ' <span class="c">' + c + "</span>" : "") + "</button>").join("") + "</div>" +
+    '<div class="pbody' + (P.tab === "messages" ? " chat" : "") + '" id="pbody">' + body + "</div>" +
+    (P.tab === "messages" && phone ? '<form class="pfoot" onsubmit="sendMsg(event)"><input class="in" id="pmsg" placeholder="Write a text to ' + esc(first) + '…" autocomplete="off" /><button class="btn pri">' + ic("msg", 14) + "Send</button></form>" : "");
+  const panel = document.querySelector(".panel");
+  if (panel && !panel.classList.contains("out")) panel.innerHTML = html; else $("panelbox").innerHTML = '<div class="scrim" onclick="closePanel()"></div><div class="panel">' + html + "</div>";
+  if (P.tab === "messages") { const b = $("pbody"); b.scrollTop = b.scrollHeight; $("pmsg")?.focus(); }
+}
+async function reloadPanel() { if (P) await openPanel(P.type, P.id, P.phone, P.tab); }
+async function sendMsg(e) {
+  e.preventDefault(); const i = $("pmsg"), body = i.value.trim(); if (!body) return;
+  i.value = "";
+  try { await api("/api/messages/" + cur.tenantId, { phone: P.phone, body }); toast("Text sent", D.testMode ? "Test mode: it shows on the simulator phone" : "Delivered by SMS", "msg"); }
+  catch (x) { toast("Couldn't send", (x.data?.errors || ["Please try again"])[0], "x"); }
+  reloadPanel();
+}
+async function setPrio(id, urgent) {
+  await api("/api/callbacks/" + cur.tenantId + "/" + id + "/priority", { urgent });
+  D.callbacks.forEach((c) => { if (c.id === id) c.urgent = urgent; });
+  toast(urgent ? "Marked as urgent" : "Marked as normal", "Priority updated", "alert"); renderAll(); reloadPanel();
+}
+function markCalled(id) { api("/api/callbacks/" + cur.tenantId + "/" + id + "/called", {}).then(() => reloadPanel()).catch(() => {}); }
+async function seenFromPanel(id) { await seen(id); reloadPanel(); }
+async function doneFromPanel(id) { await done(id); reloadPanel(); }
+
+/* ---------- tables with pagination ---------- */
+function pageSize(id) { const el = $(id); return Math.max(4, Math.floor((el.clientHeight - 46) / 57)); }
+function pager(id, k, total, size) {
+  const pages = Math.max(1, Math.ceil(total / size)); F[k].page = Math.min(F[k].page, pages); const p = F[k].page;
+  const from = total ? (p - 1) * size + 1 : 0, to = Math.min(p * size, total);
+  const nums = []; for (let i = 1; i <= pages; i++) if (i === 1 || i === pages || Math.abs(i - p) <= 1) nums.push(i); else if (nums[nums.length - 1] !== "…") nums.push("…");
+  $(id).innerHTML = `<span class="info">Showing ${from}–${to} of ${total}</span><button ${p <= 1 ? "disabled" : ""} onclick="F.${k}.page--;renderTables()">${ic("l", 15)}</button>${nums.map((n) => n === "…" ? '<span class="gap">…</span>' : `<button class="${n === p ? "on" : ""}" onclick="F.${k}.page=${n};renderTables()">${n}</button>`).join("")}<button ${p >= pages ? "disabled" : ""} onclick="F.${k}.page++;renderTables()">${ic("r", 15)}</button>`;
+  return (p - 1) * size;
+}
+function renderTables() {
+  const p = location.hash.slice(1);
+  if (p === "calls") renderCalls(); else if (p === "bookings") renderBookings(); else if (p === "callbacks") renderCallbacks();
+}
+function renderCalls() {
+  const f = F.calls, q = f.q.toLowerCase(), since = +f.days ? Date.now() - +f.days * DAY : 0;
+  const rows = D.calls.filter((c) => { const o = outcomeOf(c); return (f.outcome === "all" || o === f.outcome || (f.outcome === "callback" && o === "callback")) && (f.by === "all" || c.handledBy === f.by) && (!since || new Date(c.createdAt) > since) && (!q || `${c.from} ${fmtPhone(c.from)} ${c.summary}`.toLowerCase().includes(q)); });
+  const size = pageSize("t-calls"), start = pager("p-calls", "calls", rows.length, size);
+  $("t-calls").innerHTML = rows.length ? `<table><thead><tr><th>Caller</th><th>Answered by</th><th>Result</th><th>Summary</th><th>Length</th><th>When</th></tr></thead><tbody>${rows.slice(start, start + size).map((c) => { const o = outcomeOf(c); return `<tr class="click" onclick="openCall('${c.callId}')">
+    <td><div class="cell"><span class="av" style="background:rgba(30,30,80,.06);color:var(--ink-2)">${ic(o === "hang_up" ? "off" : "phone", 15)}</span><div><b>${esc(c.callerName || fmtPhone(c.from) || "Unknown")}</b>${c.callerName ? `<span class="sub num">${esc(fmtPhone(c.from))}</span>` : ""}</div></div></td>
+    <td>${c.handledBy === "staff" ? `<span class="tag green">${ic("user")}Team</span>` : c.handledBy === "ai" ? `<span class="tag acc">${ic("bot")}AI</span>` : '<span class="sub">No one</span>'}</td>
+    <td><span class="tag ${OUT[o][1]}">${OUT[o][0]}</span></td><td><span class="clip">${esc(c.summary ?? "–")}</span></td>
+    <td class="sub num">${c.lengthMinutes < 1 ? Math.round(c.lengthMinutes * 60) + "s" : Math.floor(c.lengthMinutes) + "m " + Math.round((c.lengthMinutes % 1) * 60) + "s"}</td>
+    <td class="sub" style="white-space:nowrap">${tz(c.createdAt, { month: "short", day: "numeric" })}, ${tz(c.createdAt, { hour: "numeric", minute: "2-digit" })}</td></tr>`; }).join("")}</tbody></table>` : empty("No calls match these filters", "Try another filter or make a call from the simulator.");
+}
+function renderBookings() {
+  const f = F.book, q = f.q.toLowerCase(), now = Date.now();
+  let rows = D.bookings.filter((b) => b.status === "booked");
+  if (f.status === "new") rows = rows.filter(isNew).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  else if (f.status === "upcoming") rows = rows.filter((b) => new Date(b.end) > now).sort((a, b) => (isNew(b) - isNew(a)) || a.start.localeCompare(b.start));
+  else if (f.status === "past") rows = rows.filter((b) => new Date(b.end) <= now).sort((a, b) => b.start.localeCompare(a.start));
+  else rows = rows.sort((a, b) => b.start.localeCompare(a.start));
+  rows = rows.filter((b) => (f.source === "all" || b.source === f.source) && (f.service === "all" || b.serviceId === f.service) && (!q || `${b.customerName} ${b.customerPhone} ${fmtPhone(b.customerPhone)}`.toLowerCase().includes(q)));
+  const size = pageSize("t-book"), start = pager("p-book", "book", rows.length, size);
+  $("t-book").innerHTML = rows.length ? `<table><thead><tr><th>Customer</th><th>Service</th><th>Appointment</th><th>Booked via</th><th>Status</th><th></th></tr></thead><tbody>${rows.slice(start, start + size).map((b) => `<tr class="click ${isNew(b) ? "isnew" : ""}" onclick="openBooking('${b.id}')">
+    <td><div class="cell">${avatar(b.customerName)}<div><b>${esc(b.customerName)} ${isNew(b) ? '<span class="newtag" style="margin-left:4px">NEW</span>' : ""}</b><span class="sub num">${esc(fmtPhone(b.customerPhone))}</span></div></div></td>
+    <td><b style="font-weight:600">${esc(svc(b.serviceId))}</b><span class="sub clip" style="max-width:280px">${esc(b.notes ?? "")}</span></td>
+    <td style="white-space:nowrap"><b style="font-weight:600">${tz(b.start, { weekday: "short", month: "short", day: "numeric" })}</b><div class="sub">${tz(b.start, { hour: "numeric", minute: "2-digit" })}</div></td>
+    <td><span class="tag">${b.source === "web" ? ic("globe") + "Online" : ic("phone") + "AI call"}</span></td>
+    <td>${new Date(b.end) > now ? '<span class="tag green">Confirmed</span>' : '<span class="tag">Completed</span>'}</td>
+    <td style="text-align:right">${isNew(b) ? `<button class="btn sm pri" onclick="event.stopPropagation();seen('${b.id}')">${ic("check", 14)}Mark seen</button>` : `<span class="sub">Seen ${ago(b.seenAt)}</span>`}</td></tr>`).join("")}</tbody></table>` : empty(f.status === "new" ? "No new bookings" : "No bookings match these filters", f.status === "new" ? "You've seen every booking." : "");
+}
+function renderCallbacks() {
+  const f = F.cb, q = f.q.toLowerCase();
+  const rows = D.callbacks.filter((c) => (f.status === "all" || c.status === f.status) && (f.prio === "all" || (f.prio === "urgent") === c.urgent) && (!q || `${c.callerName} ${c.callerPhone} ${fmtPhone(c.callerPhone)} ${c.reason}`.toLowerCase().includes(q))).sort((a, b) => (a.status === "done") - (b.status === "done") || b.urgent - a.urgent || b.createdAt.localeCompare(a.createdAt));
+  const size = pageSize("t-cb"), start = pager("p-cb", "cb", rows.length, size);
+  $("t-cb").innerHTML = rows.length ? `<table><thead><tr><th>Caller</th><th>Reason</th><th>Priority</th><th>Requested</th><th></th></tr></thead><tbody>${rows.slice(start, start + size).map((c) => `<tr class="click" onclick="openCallback('${c.id}')" style="${c.status === "done" ? "opacity:.55" : ""}">
+    <td><div class="cell">${avatar(c.callerName)}<div><b>${esc(c.callerName ?? "Unknown")}</b><span class="sub num">${esc(fmtPhone(c.callerPhone) || "No number")}</span></div></div></td>
+    <td><span class="clip">${esc(c.reason.replace("EMERGENCY: ", "Emergency: "))}</span></td>
+    <td>${c.urgent ? '<span class="tag red">Urgent</span>' : '<span class="tag">Normal</span>'}</td><td class="sub">${ago(c.createdAt)}</td>
+    <td style="text-align:right">${c.status === "done" ? '<span class="tag green">Done</span>' : `<button class="btn sm green" onclick="event.stopPropagation();done('${c.id}')">${ic("check", 14)}Mark done</button>`}</td></tr>`).join("")}</tbody></table>` : empty(f.status === "open" ? "All caught up" : "Nothing here", f.status === "open" ? "No one is waiting for a call back." : "");
+}
+
+async function seen(id) { await api(`/api/bookings/${cur.tenantId}/${id}/seen`, {}); D.bookings.forEach((b) => { if (b.id === id) b.seenAt = new Date().toISOString(); }); renderAll(); toast("Marked as seen", "Booking confirmed by you"); }
+async function seenAll() { const r = await api(`/api/bookings/${cur.tenantId}/all/seen`, {}); D.bookings.forEach((b) => (b.seenAt ??= new Date().toISOString())); renderAll(); toast("All bookings marked as seen", `${r.count} booking${r.count === 1 ? "" : "s"}`); }
+async function done(id) { await api(`/api/callbacks/${cur.tenantId}/${id}/done`, {}); D.callbacks.forEach((c) => { if (c.id === id) c.status = "done"; }); renderAll(); toast("Callback done", "Removed from the open list"); refresh(); }
+
+/* ---------- live calls: ringing, answer, take over ---------- */
+async function pollLive() {
+  if (!cur) return;
+  let list; try { list = await api(`/api/live/${cur.tenantId}`); } catch { return; }
+  const before = new Map(liveCalls.map((c) => [c.id, c.status]));
+  liveCalls = list;
+  const ringing = list.find((c) => c.status === "ringing" && c.direction !== "out" && !ringDismiss.has(c.id));
+  renderRing(ringing);
+  if (ringing && !before.has(ringing.id)) chime("ring");
+  if (ringing && Math.round(ringing.secondsLeft) % 2 === 0 && before.get(ringing.id) === "ringing") chime("ring");
+  for (const c of list) if (before.get(c.id) && before.get(c.id) !== "ended" && c.status === "ended") { refresh(); if (P && c.direction === "out" && P.phone === c.from) reloadPanel(); }
+  const active = list.find((c) => c.status === "ai" || c.status === "staff" || (c.direction === "out" && c.status === "ringing"));
+  const lp = $("livepill");
+  lp.hidden = !active || (drawerId === active?.id);
+  if (active) lp.lastElementChild.textContent = active.direction === "out" ? `${active.status === "ringing" ? "Calling" : "On the call with"} ${active.customerName || fmtPhone(active.from)}` : `Live call · ${active.status === "ai" ? "AI talking" : "You're on the call"} · ${fmtPhone(active.from)}`;
+  if (drawerId) { const c = list.find((x) => x.id === drawerId); if (c) renderLive(c); }
+  else if (list.some((c) => c.status === "ai" && !before.has(c.id) && before.size === 0)) {}
+}
+function renderRing(c) {
+  if (!c) { $("ringbox").innerHTML = ""; return; }
+  const pct = (c.secondsLeft / c.ringSeconds) * 100;
+  if (!$("ringbox").firstElementChild || $("ringbox").firstElementChild.dataset.id !== c.id) {
+    $("ringbox").innerHTML = `<div class="ring" data-id="${c.id}"><div class="ring-h"><span class="ring-av">${ic("phone")}</span><div><small>Incoming call</small><b class="num">${esc(fmtPhone(c.from))}</b><span>Calling ${esc(cur.businessName)}</span></div></div>
+      <div class="ring-bar"><i id="ringbar"></i></div><div class="ring-cd" id="ringcd"></div>
+      <div class="ring-b"><button class="btn" onclick="letAI('${c.id}')">${ic("bot")}Let AI answer</button><button class="btn green" onclick="answer('${c.id}')">${ic("phone")}Answer</button></div></div>`;
+  }
+  $("ringbar").style.width = pct + "%";
+  $("ringcd").textContent = `If you don't answer, the AI picks up in ${Math.ceil(c.secondsLeft)} seconds.`;
+}
+async function answer(id) { const c = await api(`/api/live/${cur.tenantId}/${id}/answer`, {}); $("ringbox").innerHTML = ""; drawerId = id; renderLive(c, true); }
+async function letAI(id) { ringDismiss.add(id); const c = await api(`/api/live/${cur.tenantId}/${id}/ai`, {}); $("ringbox").innerHTML = ""; drawerId = id; renderLive(c, true); }
+function openDrawer() { const a = liveCalls.find((c) => c.status === "ai" || c.status === "staff" || (c.direction === "out" && c.status === "ringing")); if (a) { drawerId = a.id; renderLive(a, true); $("livepill").hidden = true; } }
+function closeDrawer() { drawerId = null; $("drawerbox").innerHTML = ""; }
+async function takeOver(id) { renderLive(await api(`/api/live/${cur.tenantId}/${id}/answer`, {}), true); }
+async function callOut(phone, name, cbId) {
+  try {
+    const c = await api(`/api/live/${cur.tenantId}/call-out`, { phone, name, callbackId: cbId || undefined });
+    drawerId = c.id; renderLive(c, true); $("livepill").hidden = true;
+    liveCalls = liveCalls.filter((x) => x.id !== c.id).concat(c);
+    toast("Calling " + (name || fmtPhone(phone)), "It rings on the customer's phone (phone simulator).", "phone");
+  } catch { toast("Couldn't start the call", "Please try again.", "alert"); }
+}
+async function endLive(id) { renderLive(await api(`/api/live/${cur.tenantId}/${id}/hangup`, { by: "staff" })); refresh(); }
+async function staffSay(e, id) { e.preventDefault(); const i = $("staffin"); const t = i.value.trim(); if (!t) return; i.value = ""; renderLive(await api(`/api/live/${cur.tenantId}/${id}/staff-say`, { text: t })); }
+let drawnMsgs = 0;
+function renderLive(c, fresh) {
+  const out = c.direction === "out", who = c.customerName || fmtPhone(c.from);
+  const st = { ringing: [out ? "Ringing their phone…" : "Ringing", "amber"], ai: ["AI is talking", "acc"], staff: ["You're on the call", "green"], ended: ["Call ended", ""] }[c.status];
+  if (fresh || !$("livemsgs") || $("drawerbox").firstElementChild?.dataset.id !== c.id) {
+    drawnMsgs = 0;
+    $("drawerbox").innerHTML = `<div class="drawer" data-id="${c.id}"><div class="dr-h"><span class="ring-av${out ? " out" : ""}" style="width:40px;height:40px">${ic("phone", 17)}</span><div><b class="num">${esc(out ? who : fmtPhone(c.from))}</b><span>${out ? `You're calling ${esc(c.customerName ? fmtPhone(c.from) : "this customer")}` : `Live call to ${esc(cur.businessName)}`}</span></div><button class="x" onclick="closeDrawer()">${ic("x")}</button></div>
+      <div class="dr-s" id="livestat"></div><div class="msgs" id="livemsgs"></div><div id="livefoot"></div></div>`;
+  }
+  $("livestat").innerHTML = `<span class="tag ${st[1]}">${st[0]}</span>${c.status === "ai" ? `<button class="btn sm green" style="margin-left:auto" onclick="takeOver('${c.id}')">${ic("user", 14)}Take over from AI</button>` : ""}${c.status !== "ended" ? `<button class="btn sm red" style="${c.status === "ai" ? "" : "margin-left:auto"}" onclick="endLive('${c.id}')">${ic("phone", 14)}${out && c.status === "ringing" ? "Cancel call" : "End call"}</button>` : ""}`;
+  const box = $("livemsgs");
+  for (; drawnMsgs < c.messages.length; drawnMsgs++) { const m = c.messages[drawnMsgs]; box.insertAdjacentHTML("beforeend", `<div class="m ${m.from}">${m.from !== "system" ? `<small>${m.from === "caller" ? (out ? esc(c.customerName || "Customer") : "Caller") : m.from === "ai" ? "AI receptionist" : "You"}</small>` : ""}${esc(m.text)}</div>`); box.scrollTop = box.scrollHeight; }
+  const foot = c.status === "ringing" && out ? `<div class="sumbox" style="margin-top:12px"><b>Waiting for them to answer</b>It rings on the phone simulator for up to 30 seconds. Open the phone with the same number and tap Accept.</div>` : c.status === "staff" ? `<form class="dr-f" onsubmit="staffSay(event,'${c.id}')"><input class="in" id="staffin" placeholder="Type what you'd say to ${out ? esc((c.customerName || 'the customer').split(' ')[0]) : 'the caller'}… (they hear it)" autocomplete="off" /><button class="btn pri">Send</button></form>` : c.status === "ended" ? `<div class="sumbox" style="margin-top:12px"><b>${out ? "Saved to this customer's history" : "Saved to Calls"}</b>${esc(c.summary ?? "")}</div>` : "";
+  if ($("livefoot").dataset.s !== c.status) { $("livefoot").innerHTML = foot; $("livefoot").dataset.s = c.status; if (c.status === "staff") $("staffin")?.focus(); }
+}
+
+/* ---------- AI training ---------- */
+const TABS = [
+  ["business", "store", "Business & hours", "Name, type of business and opening hours."],
+  ["extra", "spark", "AI prompt & instructions", "Tell the AI how to behave, in plain English. It follows this on every call."],
+  ["voice", "mic", "Greeting & calls", "What the AI says first and when it picks up."],
+  ["services", "tag", "Services & prices", "What customers can book, prices the AI may share, and your service area."],
+  ["questions", "help", "Questions to ask", "What the AI asks every caller before booking."],
+  ["faq", "book", "Knowledge base (FAQ)", "Facts about your business (warranty, payment, licenses…). The AI uses these, and answers general questions from its own knowledge."],
+  ["emergency", "alert", "Emergencies & alerts", "What counts as urgent and who gets alerted."],
+  ["preview", "code", "Preview AI script", "The full script the AI uses. Built from your settings, or edit it yourself."],
+  ["bland", "phone", "Real test call (Bland)", "Talk to Bland's real AI receptionist from your browser, or let it call your phone."],
+];
+let tab = "business", draft = null, dirty = false;
+const DAYS = [["mon", "Monday"], ["tue", "Tuesday"], ["wed", "Wednesday"], ["thu", "Thursday"], ["fri", "Friday"], ["sat", "Saturday"], ["sun", "Sunday"]];
+const ZONES = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu"];
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || "field";
+const getP = (o, p) => p.split(".").reduce((a, k) => a?.[k], o);
+function setP(o, p, v) { const ks = p.split("."); const last = ks.pop(); const t = ks.reduce((a, k) => a[k], o); t[last] = v; }
+function markDirty() { dirty = true; $("tr-msg").className = "msg dirty"; $("tr-msg").innerHTML = `${ic("alert", 14)}Unsaved changes`; }
+
+function renderTraining() {
+  draft = JSON.parse(JSON.stringify(cur)); dirty = false;
+  $("tr-msg").className = "msg"; $("tr-msg").innerHTML = `${ic("check", 14)}All changes saved`;
+  renderTabs(); renderTab();
+}
+function renderTabs() { $("tabs").innerHTML = TABS.map(([k, i, t]) => `<button class="${k === tab ? "on" : ""}" onclick="tab='${k}';renderTabs();renderTab()">${ic(i)}${t}</button>`).join("") + `<div class="hint"><b style="display:block;margin-bottom:2px">How training works</b>Everything here is used by the AI on real calls and in the phone simulator. Save, then test it with a call.</div>`; }
+const fld = (label, inner, small) => `<label class="fld"><span>${label}</span>${inner}${small ? `<small>${small}</small>` : ""}</label>`;
+const inp = (path, ph = "", type = "text") => `<input class="in" type="${type}" data-p="${path}" value="${esc(getP(draft, path) ?? "")}" placeholder="${esc(ph)}" />`;
+const area = (path, ph = "", rows = 3) => `<textarea class="in" rows="${rows}" data-p="${path}" placeholder="${esc(ph)}">${esc(getP(draft, path) ?? "")}</textarea>`;
+const tgl = (path) => `<button type="button" class="tgl ${getP(draft, path) ? "on" : ""}" onclick="setP(draft,'${path}',!getP(draft,'${path}'));markDirty();renderTab()"></button>`;
+const xBtn = (fn) => `<button type="button" class="x" onclick="${fn};markDirty();renderTab()">${ic("x")}</button>`;
+
+function renderTab() {
+  const [, , title, sub] = TABS.find((t) => t[0] === tab);
+  $("tr-title").textContent = title; $("tr-sub").textContent = sub;
+  const d = draft; let h = `<div id="errs"></div>`;
+  if (tab === "business") {
+    h += `<div class="fg">${fld("Business name", inp("businessName"))}${fld("Type of business", inp("industry", "e.g. dentist, roofing, law firm, salon"), "Any kind of business works.")}
+      ${fld("Time zone", `<select class="in" data-p="timezone">${ZONES.map((z) => `<option ${z === d.timezone ? "selected" : ""}>${z}</option>`).join("")}</select>`)}
+      <div class="fld"><span>Test mode</span><div class="tglrow"><div><b>${d.testMode ? "On: nothing real is sent" : "Off: real texts and bookings"}</b><span>Keep this on until you're ready to go live.</span></div>${tgl("testMode")}</div></div></div>
+      <div class="sec">Opening hours</div><div class="hours">${DAYS.map(([k, n]) => { const p = (d.hours[k] ?? [])[0]; return `<div class="hr"><b>${n.slice(0, 3)}</b><button type="button" class="tgl ${p ? "on" : ""}" onclick="toggleDay('${k}')"></button>${p ? `<input class="in" type="time" value="${p.open}" onchange="draft.hours.${k}[0].open=this.value;markDirty()" /><input class="in" type="time" value="${p.close}" onchange="draft.hours.${k}[0].close=this.value;markDirty()" />` : '<span class="closed">Closed. The AI answers all calls this day.</span>'}</div>`; }).join("")}</div>`;
+  } else if (tab === "voice") {
+    h += `<div class="fg one">${fld("Greeting (first thing the AI says)", area("voice.greeting", "Thanks for calling …. I'm the automated assistant.", 2), "Must say it's an automated assistant (required by law).")}</div>
+      <div class="sec">AI voice (Bland)</div>
+      <p class="sub" style="margin:-4px 0 10px">The voice callers hear on Bland calls. Pick one, press <b>Save training</b>, then try it with Real test call (Bland). The free practice phone uses your browser's voice instead.</p>
+      <div class="vp-bar"><div class="seg" id="vp-g">${[["", "All"], ["female", "Female"], ["male", "Male"]].map(([k, l]) => `<button class="${vpGender === k ? "on" : ""}" onclick="vpGender='${k}';renderVoices()">${l}</button>`).join("")}</div><input class="in" id="vp-q" placeholder="Search voices (e.g. British, calm, Derek)…" oninput="renderVoices()" /></div>
+      <div class="vp-list" id="vp-list"><div class="sub" style="padding:14px">Loading voices from Bland…</div></div>
+      <div class="sec">When the AI picks up</div><div class="fg one"><div class="fld"><span>Ring time before the AI answers</span><div class="range"><input type="range" min="5" max="45" step="1" value="${d.voice.ringSeconds}" oninput="draft.voice.ringSeconds=+this.value;this.nextElementSibling.textContent=this.value+'s';markDirty()" /><b>${d.voice.ringSeconds}s</b></div><small>Your team has this long to answer. Then the AI takes the call.</small></div></div>
+      <div class="fg">${fld("Longest call (minutes)", `<input class="in" type="number" min="1" max="30" data-p="voice.maxCallMinutes" data-num value="${d.voice.maxCallMinutes}" />`, "The AI wraps up politely and creates a callback.")}
+      <div class="fld"><span>Call recording</span><div class="tglrow"><div><b>${d.recording.enabled ? "Calls are recorded" : "Not recorded"}</b><span>A recording notice is played if on.</span></div>${tgl("recording.enabled")}</div></div></div>
+      ${d.recording.enabled ? `<div class="fg one">${fld("Recording notice", inp("recording.notice"))}</div>` : ""}
+      <div class="sec">Missed-call text</div><div class="fg one"><div class="tglrow"><div><b>Text people who hang up before anyone answers</b><span>Use {businessName} and {bookingLink} in the message.</span></div>${tgl("textBack.enabled")}</div>${d.textBack.enabled ? area("textBack.message", "", 2) : ""}</div>`;
+    setTimeout(loadVoices); // after the tab is on the page
+  } else if (tab === "services") {
+    h += `<div class="sec">Services customers can book</div><div class="rows">${d.services.map((s, i) => `<div class="row" style="grid-template-columns:1fr 130px 34px"><input class="in" data-p="services.${i}.name" value="${esc(s.name)}" placeholder="Service name" /><input class="in" type="number" min="5" data-num data-p="services.${i}.appointmentMinutes" value="${s.appointmentMinutes}" title="Minutes" />${xBtn(`draft.services.splice(${i},1)`)}</div>`).join("")}</div>
+      <button class="add" onclick="draft.services.push({id:'',name:'',appointmentMinutes:60});markDirty();renderTab()">${ic("plus", 14)}Add service</button>
+      <div class="sec">Prices the AI may share</div><div class="rows">${d.approvedPrices.map((p, i) => `<div class="row" style="grid-template-columns:1fr 180px 34px"><input class="in" data-p="approvedPrices.${i}.item" value="${esc(p.item)}" placeholder="What (e.g. Inspection)" /><input class="in" data-p="approvedPrices.${i}.price" value="${esc(p.price)}" placeholder="Price (e.g. Free, $99)" />${xBtn(`draft.approvedPrices.splice(${i},1)`)}</div>`).join("") || '<div class="sub" style="padding:4px 2px">No prices. The AI will never quote a price.</div>'}</div>
+      <button class="add" onclick="draft.approvedPrices.push({item:'',price:''});markDirty();renderTab()">${ic("plus", 14)}Add price</button>
+      <div class="sec">Booking rules</div><div class="fg" style="grid-template-columns:repeat(3,1fr)">${fld("Gap between visits (min)", `<input class="in" type="number" min="0" data-num data-p="booking.bufferMinutes" value="${d.booking.bufferMinutes}" />`)}${fld("Max bookings per day", `<input class="in" type="number" min="1" data-num data-p="booking.maxPerDay" value="${d.booking.maxPerDay}" />`)}${fld("Minimum notice (hours)", `<input class="in" type="number" min="0" data-num data-p="booking.minLeadHours" value="${d.booking.minLeadHours}" />`)}</div>
+      <div class="sec">Service area</div><div class="fg one">${fld("ZIP codes you serve", `<textarea class="in" rows="2" oninput="draft.serviceArea.zipCodes=(this.value.match(/\\d{5}/g)||[]);markDirty()">${esc(d.serviceArea.zipCodes.join(", "))}</textarea>`, `${d.serviceArea.zipCodes.length} ZIP codes. Separate with commas.`)}</div>`;
+  } else if (tab === "questions") {
+    h += `<div class="rows">${d.qualifyingQuestions.map((q, i) => `<div class="row" style="grid-template-columns:28px 1fr auto 34px 34px 34px"><b style="text-align:center;color:var(--muted)">${i + 1}</b><input class="in" data-p="qualifyingQuestions.${i}.question" value="${esc(q.question)}" placeholder="Question the AI asks" /><label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink-2)">Required <button type="button" class="tgl ${q.required ? "on" : ""}" onclick="draft.qualifyingQuestions[${i}].required=!draft.qualifyingQuestions[${i}].required;markDirty();renderTab()"></button></label><button type="button" class="x" title="Move up" onclick="mv(${i},-1)">${ic("up")}</button><button type="button" class="x" title="Move down" onclick="mv(${i},1)">${ic("down")}</button>${xBtn(`draft.qualifyingQuestions.splice(${i},1)`)}</div>`).join("")}</div>
+      <button class="add" onclick="draft.qualifyingQuestions.push({field:'',question:'',required:true});markDirty();renderTab()">${ic("plus", 14)}Add question</button>
+      <div class="sub" style="padding:0 2px">Tip: a question about the ZIP code makes the AI check your service area before booking.</div>`;
+  } else if (tab === "faq") {
+    h += `<div class="rows">${d.knowledgeBase.map((k, i) => `<div class="row" style="grid-template-columns:1fr 34px;align-items:start"><div style="display:grid;gap:8px"><input class="in" data-p="knowledgeBase.${i}.topic" value="${esc(k.topic)}" placeholder="Topic or question (e.g. Do you offer financing?)" /><textarea class="in" rows="2" data-p="knowledgeBase.${i}.answer" placeholder="The exact answer the AI should give">${esc(k.answer)}</textarea></div>${xBtn(`draft.knowledgeBase.splice(${i},1)`)}</div>`).join("") || '<div class="sub" style="padding:4px 2px">No answers yet. Add the questions customers ask most.</div>'}</div>
+      <button class="add" onclick="draft.knowledgeBase.push({topic:'',answer:''});markDirty();renderTab()">${ic("plus", 14)}Add answer</button>`;
+  } else if (tab === "emergency") {
+    h += `<div class="sec">Emergency words</div><div class="chips">${d.emergency.keywords.map((k, i) => `<span>${esc(k)}<button type="button" onclick="draft.emergency.keywords.splice(${i},1);markDirty();renderTab()">${ic("x", 12)}</button></span>`).join("")}<input placeholder="Type a word or phrase and press Enter" onkeydown="if(event.key==='Enter'&&this.value.trim()){event.preventDefault();draft.emergency.keywords.push(this.value.trim());markDirty();renderTab();document.querySelector('.chips input').focus()}" /></div>
+      <div class="sec">When it's an emergency</div><div class="radio"><button type="button" class="${d.emergency.action === "transfer" ? "on" : ""}" onclick="draft.emergency.action='transfer';markDirty();renderTab()"><b>Transfer to on-call</b><span>Connect the caller to your on-call number and text an alert.</span></button><button type="button" class="${d.emergency.action === "redirect" ? "on" : ""}" onclick="draft.emergency.action='redirect';markDirty();renderTab()"><b>Tell them to call 911</b><span>For medical or safety emergencies. Your team is still alerted.</span></button></div>
+      ${d.emergency.action === "redirect" ? `<div class="fg one">${fld("What the AI says", area("emergency.redirectMessage", "If this is a medical emergency, please hang up and call 911.", 2))}</div>` : ""}
+      <div class="sec">On-call numbers (tried in order)</div><div class="rows">${d.emergency.onCallNumbers.map((n, i) => `<div class="row" style="grid-template-columns:1fr 34px"><input class="in" value="${esc(n)}" onchange="draft.emergency.onCallNumbers[${i}]=toE164(this.value);markDirty()" placeholder="+17135550100" />${xBtn(`draft.emergency.onCallNumbers.splice(${i},1)`)}</div>`).join("")}</div>
+      <button class="add" onclick="draft.emergency.onCallNumbers.push('');markDirty();renderTab()">${ic("plus", 14)}Add number</button>
+      <div class="sec">Who gets alerts (bookings, callbacks)</div><div class="rows">${d.escalationContacts.map((c, i) => `<div class="row" style="grid-template-columns:1fr 120px 1.3fr 34px"><input class="in" data-p="escalationContacts.${i}.name" value="${esc(c.name)}" placeholder="Name" /><select class="in" data-p="escalationContacts.${i}.channel"><option value="sms" ${c.channel === "sms" ? "selected" : ""}>Text</option><option value="email" ${c.channel === "email" ? "selected" : ""}>Email</option></select><input class="in" value="${esc(c.to)}" onchange="draft.escalationContacts[${i}].to=draft.escalationContacts[${i}].channel==='sms'?toE164(this.value):this.value;markDirty()" placeholder="Phone or email" />${xBtn(`draft.escalationContacts.splice(${i},1)`)}</div>`).join("")}</div>
+      <button class="add" onclick="draft.escalationContacts.push({name:'',channel:'sms',to:''});markDirty();renderTab()">${ic("plus", 14)}Add person</button>`;
+  } else if (tab === "extra") {
+    h += D?.aiBrain === "claude"
+      ? `<div class="brainbox ok">${ic("check")}<div><b>Smart AI is on (Claude)</b>The AI understands anything the caller says and follows these instructions.</div></div>`
+      : D?.aiBrain === "claude-code"
+      ? `<div class="brainbox ok">${ic("check")}<div><b>Smart AI is on (your Claude Code, local testing)</b>The simulator uses the Claude Code installed on this computer, so no API key is needed. It follows these instructions. This is for your own testing only. Real customers need an API key, or Bland for real phone calls.</div></div>`
+      : `<div class="brainbox warn">${ic("alert")}<div><b>Basic mode: smart AI is off</b>Without a Claude key, the simulator only follows simple rules and can't fully follow these instructions. Add <code>ANTHROPIC_API_KEY=...</code> to the <code>.env</code> file and restart to turn on full understanding. Real phone calls through Bland always use these instructions.</div></div>`;
+    h += `<div class="fg one">${fld("Your instructions to the AI (prompt)", area("customInstructions", "Example: Be warm and friendly. Always mention our 10-year warranty. If someone asks about solar panels, say we don't do solar.", 9), "The AI follows these on every call. Safety rules (no made-up prices, no diagnosing) always stay on.")}</div>
+      <div class="sec">Ideas, click to add</div><div class="ideas">${["Be warm, friendly and short.", "Always mention we offer free estimates.", "If asked about a service we don't offer, say so politely and suggest a callback.", "Offer the earliest available time first.", "Use the caller's first name once you know it.", "Don't discuss competitors."].map((t) => `<button type="button" onclick="addIdea(this.textContent)">+ ${esc(t)}</button>`).join("")}</div>`;
+  } else if (tab === "preview") {
+    h += `<div id="scriptbox"><p class="sub">Loading…</p></div>`;
+    loadScript();
+  } else if (tab === "bland") {
+    let saved = ""; try { saved = localStorage.getItem("testPhone") || ""; } catch {}
+    h += `<div class="brainbox ok" id="bl-status">${ic("phone")}<div><b>Checking Bland…</b></div></div>
+      ${dirty ? `<div class="brainbox warn">${ic("alert")}<div><b>You have unsaved changes</b>Save first. The call uses the saved training.</div></div>` : ""}
+      <div class="sec" style="margin-top:4px">Talk in your browser (no phone needed)</div>
+      <div class="sub" style="margin:-4px 0 12px">Use your laptop mic and speakers (headphones are best). Bland's AI answers exactly like on a real call.</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn pri" id="wc-go" onclick="webCall()">${ic("mic", 15)}Start talking</button><span class="sub" id="wc-msg"></span></div>
+      <div id="wc-log" class="wc-log" hidden></div>
+      <div class="sec" style="margin-top:26px">Or: Bland calls your phone</div>
+      <div class="fg one">${fld("Your mobile number (with country code)", `<input class="in" id="bl-phone" type="tel" value="${esc(saved)}" placeholder="+923001234567 or +17135550199" />`, "Bland's AI will call this number. Answer and talk to it like a customer.")}</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn pri" id="bl-go" onclick="blandTestCall()">${ic("phone", 15)}Call me now</button><span class="sub" id="bl-msg"></span></div>
+      <div class="sec" style="margin-top:26px">Good to know</div>
+      <div class="sub" style="line-height:1.7">• Uses your Bland credit (a few cents per minute). Tests stop after 5 minutes.<br>• Phone calls to numbers outside the US and Canada need at least $5 of purchased credit in Bland. Talking in the browser doesn't call a phone.<br>• Bookings, callbacks and alerts from the call show on this dashboard. The call summary arrives a minute after you hang up.<br>• A free Cloudflare link connects Bland to this computer while you test. The dashboard itself stays private.</div>`;
+    setTimeout(loadBlandStatus, 0);
+  }
+  $("tr-body").innerHTML = h;
+  $("tr-body").querySelectorAll("[data-p]").forEach((el) => el.addEventListener("input", () => { setP(draft, el.dataset.p, el.hasAttribute("data-num") ? Number(el.value) : el.value); markDirty(); }));
+}
+async function loadBlandStatus() {
+  const box = $("bl-status"); if (!box) return;
+  try {
+    const s = await api("/api/bland/status");
+    if (!s.configured) { box.className = "brainbox warn"; box.innerHTML = `${ic("alert")}<div><b>Bland is not set up</b>Add <code>BLAND_API_KEY=...</code> to the <code>.env</code> file and restart the server.</div>`; $("bl-go").disabled = true; return; }
+    const bal = typeof s.balance === "number" ? `$${s.balance.toFixed(2)}` : "unknown";
+    const low = typeof s.balance === "number" && s.balance < 0.3;
+    box.className = "brainbox " + (low ? "warn" : "ok");
+    box.innerHTML = `${ic(low ? "alert" : "check")}<div><b>Bland is connected · credit ${bal}</b>${low ? "Credit is almost used up. Add credit in the Bland dashboard to keep testing." : "Ready for a test call."}${s.canTunnel ? "" : " <br>Missing the free Cloudflare tunnel (cloudflared), so Bland can't reach this computer."}</div>`;
+  } catch { box.className = "brainbox warn"; box.innerHTML = `${ic("alert")}<div><b>Couldn't check Bland</b>Is the internet on?</div>`; }
+}
+/* ---- Talk to Bland's AI in the browser (Bland web agent) ---- */
+let wc = null;
+function loadBlandSdk() {
+  if (window.Bland?.Webchat) return Promise.resolve();
+  window.react = window.react || {}; // the SDK's browser build expects a "react" global (only used by its React hook)
+  return new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/bland-client-js-sdk@2.1.2/dist/browser/index.global.js";
+    s.onload = () => (window.Bland?.Webchat ? ok() : fail(new Error("Bland's voice library didn't load.")));
+    s.onerror = () => fail(new Error("Couldn't load Bland's voice library. Check the internet."));
+    document.head.appendChild(s);
+  });
+}
+function wcLog(who, text) {
+  const box = $("wc-log"); if (!box || !text) return;
+  box.hidden = false;
+  const last = box.lastElementChild;
+  if (last && last.dataset.who === who && who === "ai") last.querySelector("span").textContent += " " + text; // AI text arrives in pieces
+  else box.insertAdjacentHTML("beforeend", `<div data-who="${who}"><b>${who === "ai" ? "AI receptionist" : who === "you" ? "You" : "Info"}</b><span>${esc(text)}</span></div>`);
+  box.scrollTop = box.scrollHeight;
+}
+// Bland sends each line as raw data like {"event":"update","payload":{"type":"assistant","text":"…","packetId":"…"}}
+// (sometimes as a JSON string), and the same line can arrive on two events. Show only the text, once.
+function wcShow(x) {
+  for (let i = 0; i < 3 && typeof x === "string"; i++) { // unwrap JSON strings (even double-wrapped)
+    const s = x.trim(), j = s.indexOf("{");
+    if (j < 0) return; // plain status text, not a line of the conversation
+    try { x = JSON.parse(s.slice(j)); } catch { return; }
+  }
+  let p = x?.payload ?? x ?? {};
+  for (let i = 0; i < 2 && typeof p === "string"; i++) { try { p = JSON.parse(p); } catch { return; } }
+  const text = String(p.text ?? p.transcript ?? x?.text ?? x?.transcript ?? "").trim();
+  if (!text || /^[{[]/.test(text)) return; // never show raw data
+  const who = /user|human|caller/i.test(String(p.type ?? p.role ?? x?.role ?? x?.speaker ?? "")) ? "you" : "ai";
+  const id = p.packetId ?? x?.packetId, box = $("wc-log"); if (!box) return;
+  const same = id ? box.querySelector(`[data-id="${CSS.escape(id)}"]`) : null;
+  if (same) { same.querySelector("span").textContent = text; return; }
+  const last = [...box.querySelectorAll(`[data-who="${who}"]`)].pop();
+  if (last && last.querySelector("span").textContent === text) return;
+  box.hidden = false;
+  box.insertAdjacentHTML("beforeend", `<div data-who="${who}"><b>${who === "ai" ? "AI receptionist" : "You"}</b><span>${esc(text)}</span></div>`);
+  if (id) box.lastElementChild.dataset.id = id;
+  box.scrollTop = box.scrollHeight;
+}
+function wcSet(state, note) {
+  const btn = $("wc-go"), msg = $("wc-msg"); if (!btn) return;
+  btn.disabled = state === "connecting";
+  btn.classList.toggle("danger", state === "open");
+  btn.innerHTML = state === "open" ? `${ic("phone", 15)}End` : `${ic("mic", 15)}Start talking`;
+  msg.innerHTML = note ?? "";
+}
+async function webCall() {
+  if (wc && wc.state !== "closed") { wc.stop(); return; }
+  wcSet("connecting", "Getting Bland ready… (the first time takes about 15 seconds)");
+  $("wc-log").innerHTML = ""; $("wc-log").hidden = true;
+  try {
+    const [r] = await Promise.all([api(`/api/bland/${cur.tenantId}/web-call`, {}), loadBlandSdk()]);
+    if (!r.ok) throw { data: r };
+    wc = new window.Bland.Webchat({});
+    wc.on("open", () => wcSet("open", `<b style="color:var(--green)">Connected.</b> Say hello and talk like a customer.`));
+    // Bland gives every message twice ("text" = raw JSON string, "message" = unpacked): use only the unpacked one.
+    wc.on("message", wcShow);
+    wc.on("error", (e) => { if (e?.type !== "parse-error" && e?.message) wcLog("info", "Problem: " + e.message); }); // ignore messages Bland's library couldn't unpack
+    wc.on("closed", () => { wcSet("closed", `<b>Call ended.</b> It shows in Calls in about a minute.`); loadBlandStatus(); setTimeout(refresh, 10000); });
+    await wc.start({ agentId: r.agentId, sessionId: r.token });
+  } catch (e) {
+    wc = null;
+    const m = e?.data?.errors?.join(" ") ?? (/Permission|NotAllowed/i.test(String(e?.name ?? e)) ? "Microphone blocked. Allow the microphone in the address bar and try again." : e?.message ?? "Couldn't start.");
+    wcSet("closed", `<b style="color:var(--red)">${esc(m)}</b>`);
+  }
+}
+let blPoll = null;
+async function blandTestCall() {
+  const phone = $("bl-phone").value.trim().replace(/[\s()-]/g, "");
+  const msg = $("bl-msg"), btn = $("bl-go");
+  if (!/^\+\d{8,15}$/.test(phone)) { msg.innerHTML = `<b style="color:var(--red)">Enter the full number with country code, starting with +</b>`; return; }
+  try { localStorage.setItem("testPhone", phone); } catch {}
+  btn.disabled = true; msg.textContent = "Connecting to Bland… (the first time takes about 15 seconds)";
+  try {
+    const r = await api(`/api/bland/${cur.tenantId}/test-call`, { phone });
+    if (!r.ok) throw { data: r };
+    msg.innerHTML = `<b style="color:var(--green)">Calling ${esc(phone)}…</b> Answer your phone and say hello.`;
+    clearInterval(blPoll);
+    blPoll = setInterval(async () => {
+      if (!$("bl-msg")) return clearInterval(blPoll);
+      let s; try { s = await api(`/api/bland/${cur.tenantId}/test-call/${r.callId}`); } catch { return; }
+      if (!s.ok) return;
+      if (s.completed || ["completed", "failed", "busy", "no-answer", "canceled"].includes(s.status)) {
+        clearInterval(blPoll); btn.disabled = false;
+        const label = { completed: "Call finished", failed: "Call failed", busy: "Your line was busy", "no-answer": "No answer", canceled: "Call canceled" }[s.status] ?? "Call ended";
+        $("bl-msg").innerHTML = `<b>${label}</b>${s.minutes ? ` · ${(+s.minutes).toFixed(1)} min` : ""}${s.price ? ` · $${(+s.price).toFixed(2)}` : ""}${s.error ? ` · ${esc(s.error)}` : ""}${s.summary ? `<br>${esc(s.summary)}` : ""}<br>It shows in Calls in a minute.`;
+        loadBlandStatus(); setTimeout(refresh, 8000);
+      } else if (["started", "allocated"].includes(s.queueStatus)) $("bl-msg").innerHTML = `<b style="color:var(--green)">On the call…</b> Talk to the AI like a customer.`;
+    }, 4000);
+  } catch (e) {
+    btn.disabled = false;
+    msg.innerHTML = `<b style="color:var(--red)">${esc((e.data?.errors ?? ["Couldn't start the call."]).join(" "))}</b>`;
+  }
+}
+function toggleDay(k) { if ((draft.hours[k] ?? []).length) draft.hours[k] = []; else draft.hours[k] = [{ open: "09:00", close: "17:00" }]; markDirty(); renderTab(); }
+function mv(i, dir) { const a = draft.qualifyingQuestions, j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; markDirty(); renderTab(); }
+/* ---- Voice picker (Bland voices) ---- */
+let voices = null, vpGender = "";
+async function loadVoices() {
+  if (!voices) {
+    try { const r = await api("/api/bland/voices"); if (!r.ok) throw { data: r }; voices = r.voices; }
+    catch (e) {
+      const l = $("vp-list");
+      if (l) l.innerHTML = `<div style="padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="sub" style="color:var(--red);flex:1;min-width:200px">${esc(e?.data?.errors?.join(" ") ?? "Couldn't reach Bland. Check your internet connection and try again.")}</span><button class="btn sm" onclick="this.closest('.vp-list').innerHTML='<div class=&quot;sub&quot; style=&quot;padding:14px&quot;>Loading voices from Bland…</div>';loadVoices()">Try again</button></div>`;
+      return;
+    }
+  }
+  renderVoices();
+}
+function pickVoice(id) { draft.voice.voiceId = id || undefined; markDirty(); renderVoices(); }
+// ▶ plays a short sample. The first play of a voice is made by Bland (about $0.001-0.004) and saved; after that it's free.
+let vpAudio = null, vpPlaying = null;
+async function playVoice(id) {
+  const again = vpPlaying === id;
+  if (vpAudio) { vpAudio.pause(); vpAudio = null; }
+  vpPlaying = null; renderVoices();
+  if (again) return; // second click = stop
+  vpPlaying = id; renderVoices();
+  try {
+    const r = await fetch(`/api/bland/voices/${id}/sample`);
+    if (!r.ok) { let m = "Couldn't play this voice."; try { m = (await r.json()).errors?.join(" ") || m; } catch {} throw new Error(m); }
+    if (vpPlaying !== id) return; // another voice was clicked meanwhile
+    vpAudio = new Audio(URL.createObjectURL(await r.blob()));
+    vpAudio.onended = () => { if (vpPlaying === id) { vpPlaying = null; vpAudio = null; renderVoices(); } };
+    await vpAudio.play();
+  } catch (e) {
+    if (vpPlaying === id) { vpPlaying = null; renderVoices(); }
+    toast("Can't play this voice", e.message, "alert");
+  }
+}
+function renderVoices() {
+  const list = $("vp-list"); if (!list || !voices) return;
+  $("vp-g")?.querySelectorAll("button").forEach((b, i) => b.classList.toggle("on", ["", "female", "male"][i] === vpGender));
+  const q = ($("vp-q")?.value || "").toLowerCase().trim(), cur = draft.voice.voiceId || "";
+  const rows = voices.filter((v) => (!vpGender || v.gender === vpGender) && (!q || (v.name + " " + v.description).toLowerCase().includes(q)));
+  const chosen = voices.find((v) => v.id === cur || v.name === cur);
+  const play = (id) => id ? `<button class="vp-play ${vpPlaying === id ? "on" : ""}" title="Play a sample" onclick="event.stopPropagation();playVoice('${esc(id)}')">${vpPlaying === id ? "■" : "▶"}</button>` : "";
+  const row = (id, name, desc, extra) => `<div class="vp-row ${(id || "") === (chosen?.id ?? cur) ? "on" : ""}" role="button" tabindex="0" onclick="pickVoice('${esc(id)}')">${play(id)}<span class="vp-dot"></span><span class="vp-tx"><b>${esc(name)}</b><span>${esc(desc)}</span></span>${extra || ""}</div>`;
+  list.innerHTML = (q || vpGender ? "" : row("", "Bland default voice", "The female voice Bland uses when none is chosen", ""))
+    + rows.slice(0, 80).map((v) => row(v.id, v.name, v.description || (v.gender === "male" ? "Male voice" : v.gender === "female" ? "Female voice" : "No description"), (v.curated ? '<span class="tag acc">Curated</span>' : "") + (v.rating ? `<span class="vp-r">★ ${(+v.rating).toFixed(1)}</span>` : ""))).join("")
+    + (rows.length > 80 ? `<div class="sub" style="padding:10px 14px">Showing 80 of ${rows.length}. Search to find more.</div>` : "")
+    + (!rows.length ? `<div class="sub" style="padding:14px">No voices match.</div>` : "");
+  const sel = list.querySelector(".vp-row.on"); if (sel && !list.dataset.scrolled) { sel.scrollIntoView({ block: "nearest" }); list.dataset.scrolled = "1"; }
+}
+
+/* ---- Preview AI script: view, edit, save, reset to automatic ---- */
+let scriptData = null, scriptEditing = false;
+async function loadScript() {
+  try { scriptData = await api(`/api/tenants/${cur.tenantId}/script`); } catch { return; }
+  renderScript();
+}
+function renderScript() {
+  const box = $("scriptbox"); if (!box || !scriptData) return;
+  const s = scriptData;
+  if (scriptEditing) {
+    box.innerHTML = `<p class="sub" style="margin:0 0 10px">Edit the script in plain English, then press <b>Save script</b>. The safety rules (approved prices only, no made-up facts, no diagnosing, no insurance promises) are always added at the end automatically, even if you delete them here.</p>
+      <textarea class="in script-edit" id="script-ta" spellcheck="false"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn pri" onclick="saveScript()">${ic("check", 15)}Save script</button><button class="btn" onclick="scriptEditing=false;renderScript()">Cancel</button></div>`;
+    $("script-ta").value = cur.scriptOverride?.trim() || s.automatic;
+    const ta = $("script-ta"); ta.setSelectionRange(0, 0); ta.scrollTop = 0; ta.focus({ preventScroll: true });
+    return;
+  }
+  box.innerHTML = (s.edited
+      ? `<div class="brainbox warn">${ic("alert")}<div><b>You edited this script</b>The AI follows your version. Changes you make in the other tabs (hours, ZIP codes, prices, FAQ…) are <strong style="display:inline">not</strong> added to it. Press <strong style="display:inline">Reset to automatic</strong> to go back to the version built from your settings.</div></div>`
+      : `<p class="sub" style="margin:0 0 12px">${dirty ? "<b style='color:var(--amber)'>You have unsaved changes.</b> Save to see them here." : "This is exactly what the AI follows on calls. It's built from your settings in the other tabs."}</p>`) +
+    `<div style="display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap"><button class="btn pri" onclick="editScript()">${ic("spark", 15)}Edit script</button>${s.edited ? `<button class="btn" onclick="resetScript()">Reset to automatic</button>` : ""}</div>
+    <pre class="script" id="scriptpre"></pre>`;
+  $("scriptpre").textContent = s.script;
+}
+function editScript() {
+  if (dirty) return toast("Save your other changes first", "Then edit the script", "alert");
+  scriptEditing = true; renderScript();
+}
+async function saveScript() {
+  const text = $("script-ta").value.trim();
+  if (text.length < 50) return toast("The script is too short", "Write the full instructions, or press Cancel", "alert");
+  draft.scriptOverride = text === scriptData.automatic.trim() ? "" : text; // unchanged = keep it automatic
+  scriptEditing = false;
+  await save();
+}
+async function resetScript() {
+  if (!confirm("Go back to the script built automatically from your settings? Your edited version will be removed.")) return;
+  draft.scriptOverride = "";
+  await save();
+}
+function addIdea(t) { t = t.replace(/^\+\s*/, ""); draft.customInstructions = (draft.customInstructions ? draft.customInstructions.trim() + "\n" : "") + t; markDirty(); renderTab(); }
+function toE164(v) { const d = v.replace(/\D/g, ""); return d.length === 10 ? "+1" + d : d.length === 11 && d[0] === "1" ? "+" + d : v.trim(); }
+function discard() { renderTraining(); toast("Changes discarded", "Back to the saved version", "x"); }
+async function save() {
+  const body = JSON.parse(JSON.stringify(draft));
+  const used = new Set();
+  body.services = body.services.filter((s) => s.name.trim()).map((s) => { let id = s.id || slug(s.name).replace(/_/g, "-"); while (used.has(id)) id += "-2"; used.add(id); return { ...s, id }; });
+  body.qualifyingQuestions = body.qualifyingQuestions.filter((q) => q.question.trim()).map((q) => ({ ...q, field: q.field || (/zip/i.test(q.question) ? "zip_code" : slug(q.question)) }));
+  body.knowledgeBase = body.knowledgeBase.filter((k) => k.topic.trim() && k.answer.trim());
+  body.approvedPrices = body.approvedPrices.filter((p) => p.item.trim() && p.price.trim());
+  body.emergency.onCallNumbers = body.emergency.onCallNumbers.filter(Boolean);
+  body.escalationContacts = body.escalationContacts.filter((c) => c.to.trim());
+  if (!body.emergency.redirectMessage) delete body.emergency.redirectMessage;
+  try {
+    const r = await api(`/api/tenants/${cur.tenantId}`, body, "PUT");
+    const i = tenants.findIndex((t) => t.tenantId === cur.tenantId); tenants[i] = r.tenant; cur = r.tenant;
+    renderTraining(); renderBizMenu(); $("b-name").textContent = cur.businessName; $("b-ind").textContent = cur.industry;
+    toast("Training saved", "The AI will use this on the next call", "brain");
+    refresh();
+  } catch (e) {
+    const errs = e.data?.errors ?? ["Could not save. Please check your entries."];
+    $("tr-msg").className = "msg err"; $("tr-msg").innerHTML = `${ic("alert", 14)}Please fix ${errs.length} problem${errs.length > 1 ? "s" : ""}`;
+    $("errs").innerHTML = `<div class="errbox">${errs.map((x) => esc(x.replace(/^(\S+):/, (m, p) => p.replace(/\.\d+\./g, " → ").replace(/\./g, " → ") + ":"))).join("<br>")}</div>`;
+    $("tr-body").scrollTop = 0;
+  }
+}
+
+/* ---------- businesses page ---------- */
+let BIZ = [];
+async function loadBusinesses() { BIZ = await api("/api/businesses"); renderBusinesses(); }
+function renderBusinesses() {
+  const q = ($("bizq")?.value ?? "").toLowerCase();
+  const rows = BIZ.filter((b) => !q || `${b.tenant.businessName} ${b.tenant.industry}`.toLowerCase().includes(q));
+  $("bizinfo").textContent = `${BIZ.length} business${BIZ.length === 1 ? "" : "es"}`;
+  $("bizgrid").innerHTML = rows.map((b) => {
+    const t = b.tenant, i = tenants.findIndex((x) => x.tenantId === t.tenantId);
+    const isCur = t.tenantId === cur.tenantId, prompt = !!t.customInstructions?.trim();
+    return `<div class="bz glass ${isCur ? "cur" : ""}">
+      <div class="bz-top"><div class="bz-h"><span class="lg" style="background:${LOGO[i % LOGO.length]}">${esc(t.businessName[0])}</span>
+        <div class="nm"><b>${esc(t.businessName)}</b><span>${esc(t.industry)} · ${esc(t.timezone.split("/")[1].replace("_", " "))}</span>
+        <div class="bz-pills">${isCur ? '<span class="bz-pill cur">Current</span>' : ""}${t.testMode ? '<span class="bz-pill test"><i></i>Test mode</span>' : '<span class="bz-pill live"><i></i>Live</span>'}</div></div>
+        <button class="x adminonly" title="Delete business" onclick="delBizModal('${t.tenantId}')">${ic("x")}</button></div></div>
+      <div class="bz-body">
+      <div class="bz-stats"><div><b class="num">${b.calls}</b><span>Calls</span></div><div><b class="num">${b.bookings}</b><span>Bookings</span></div><div><b class="num" style="${b.newBookings ? "color:var(--acc)" : ""}">${b.newBookings}</b><span>New</span></div><div><b class="num" style="${b.openCallbacks ? "color:var(--red)" : ""}">${b.openCallbacks}</b><span>Callbacks</span></div></div>
+      <div class="bz-setup">
+        <div><span class="si">${ic("tag")}</span><span>${t.services.length} service${t.services.length === 1 ? "" : "s"}</span></div>
+        <div><span class="si">${ic("book")}</span><span>${t.knowledgeBase.length} FAQ answer${t.knowledgeBase.length === 1 ? "" : "s"}</span></div>
+        <div><span class="si">${ic("clock")}</span><span>AI answers after ${t.voice.ringSeconds}s</span></div>
+        <div class="${prompt ? "" : "warn"}" ${prompt ? "" : `onclick="openBiz('${t.tenantId}','training')" style="cursor:pointer" title="Add an AI prompt"`}><span class="si">${ic("spark")}</span><span>${prompt ? "AI prompt added" : "No AI prompt yet"}</span></div>
+      </div>
+      <div class="bz-act"><button class="btn" onclick="openBiz('${t.tenantId}','overview')">${ic("grid", 15)}Open</button><button class="btn" onclick="openBiz('${t.tenantId}','training')">${ic("brain", 15)}Train AI</button><a class="btn pri" href="/phone?biz=${t.tenantId}" target="phone">${ic("phone", 15)}Call</a></div>
+      </div>
+    </div>`;
+  }).join("") + `<div class="bz glass add adminonly" onclick="newBizModal()"><i>${ic("plus", 24)}</i><b>Add a business</b><span>Any type: dentist, salon, law firm, HVAC… Then train the AI for it.</span></div>`;
+}
+async function openBiz(id, page) { await select(id); location.hash = "#" + page; if (page === "training") { tab = "business"; renderTraining(); } }
+function delBizModal(id) {
+  const t = tenants.find((x) => x.tenantId === id);
+  $("modalbox").innerHTML = `<div class="modal-bg" onclick="if(event.target===this)this.remove()"><div class="modal"><div class="modal-h"><h2>Delete ${esc(t.businessName)}?</h2><p>The AI will stop answering for this business and it disappears from the phone simulator. Its settings file is kept as a backup.</p></div><div class="modal-b"><div id="delerr"></div></div>
+    <div class="modal-f"><button class="btn" onclick="$('modalbox').innerHTML=''">Cancel</button><button class="btn red" onclick="delBiz('${id}')">${ic("x", 15)}Delete business</button></div></div></div>`;
+}
+async function delBiz(id) {
+  try {
+    await api(`/api/tenants/${id}`, undefined, "DELETE");
+    tenants = tenants.filter((t) => t.tenantId !== id); $("modalbox").innerHTML = "";
+    if (cur.tenantId === id) await select(tenants[0].tenantId);
+    renderBizMenu(); loadBusinesses(); toast("Business deleted", "Removed from the dashboard and phone", "x");
+  } catch (e) { $("delerr").innerHTML = `<div class="errbox">${(e.data?.errors ?? ["Could not delete."]).map(esc).join("<br>")}</div>`; }
+}
+
+/* ---------- new business ---------- */
+function newBizModal() {
+  $("modalbox").innerHTML = `<div class="modal-bg" onclick="if(event.target===this)this.remove()"><div class="modal"><div class="modal-h"><h2>Add a new business</h2><p>Any type of business. You can train the AI right after.</p></div>
+    <div class="modal-b"><div id="nberr"></div><div class="fg">${fld("Business name", '<input class="in" id="nb-name" placeholder="e.g. Bright Smile Dental" />')}${fld("Type of business", '<input class="in" id="nb-ind" placeholder="e.g. dentist, law firm, HVAC" />')}${fld("Time zone", `<select class="in" id="nb-tz">${ZONES.map((z) => `<option ${z === "America/Chicago" ? "selected" : ""}>${z}</option>`).join("")}</select>`)}${fld("Alerts go to", '<input class="in" id="nb-alert" placeholder="Owner phone or email" />')}</div><div class="fg one">${fld("ZIP codes you serve", '<input class="in" id="nb-zip" placeholder="77002, 77003, 77004" />')}</div></div>
+    <div class="modal-f"><button class="btn" onclick="$('modalbox').innerHTML=''">Cancel</button><button class="btn pri" onclick="createBiz()">${ic("plus", 15)}Create business</button></div></div></div>`;
+  $("nb-name").focus();
+}
+async function createBiz() {
+  try {
+    const r = await api("/api/tenants", { businessName: $("nb-name").value, industry: $("nb-ind").value, timezone: $("nb-tz").value, alertTo: $("nb-alert").value, zipCodes: $("nb-zip").value });
+    tenants.push(r.tenant); $("modalbox").innerHTML = "";
+    await select(r.tenant.tenantId); tab = "business"; location.hash = "#training"; renderTraining();
+    toast("Business created", "It now shows on the phone. Train the AI next.", "store");
+  } catch (e) { $("nberr").innerHTML = `<div class="errbox">${(e.data?.errors ?? ["Could not create."]).map(esc).join("<br>")}</div>`; }
+}
+
+addEventListener("keydown", (e) => { if (e.key === "Escape") { if (PK) closePicker(); else if (P) closePanel(); else if (M) closeModal(); } });
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => D && renderAll(), 150); });
+addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+init().catch((e) => document.body.insertAdjacentHTML("afterbegin", `<p style="padding:20px;color:#e8365a">Could not load: ${esc(e.message)}</p>`));
+</script>
+<style id="dd-css">
+  /* Brand dropdown: replaces every plain <select> look (the real select stays hidden and keeps the value). */
+  .dd { position: relative; display: inline-flex; align-items: center; gap: 8px; text-align: left; cursor: pointer; white-space: nowrap; }
+  .dd > .dd-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .dd > .dd-c { width: 14px; height: 14px; flex: none; opacity: .55; transition: transform .22s cubic-bezier(.2,.9,.3,1.2); }
+  .dd.sel { padding: 0 12px; background-image: none !important; }
+  .dd.in { display: flex; width: 100%; }
+  .dd:hover { background-color: #fff; }
+  .dd.open { background-color: #fff; border-color: rgba(124,92,255,.5) !important; box-shadow: 0 0 0 4px rgba(124,92,255,.13); }
+  .dd.open > .dd-c { transform: rotate(180deg); opacity: .9; color: var(--acc, #6d5dfc); }
+  .dd.act { color: var(--acc, #6d5dfc); background-color: rgba(124,92,255,.1); border-color: rgba(124,92,255,.35); }
+  .dd.act::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, var(--a1, #7c5cff), var(--a2, #4f8bff)); flex: none; }
+  .ddm { position: fixed; z-index: 95; min-width: 180px; max-height: 300px; overflow-y: auto; padding: 6px; border-radius: 16px; background: rgba(255,255,255,.9); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 26px 60px -20px rgba(40,32,120,.45), 0 0 0 1px rgba(30,30,80,.05), inset 0 1px 0 #fff; animation: ddin .2s cubic-bezier(.2,.9,.3,1.2); transform-origin: top; scrollbar-width: thin; }
+  .ddm.up { transform-origin: bottom; }
+  @keyframes ddin { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
+  .ddm.up { animation-name: ddup; } @keyframes ddup { from { opacity: 0; transform: translateY(6px) scale(.97); } }
+  .ddm button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 7px 10px 7px 12px; border: 0; border-radius: 11px; background: none; text-align: left; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2, #4a4d70); cursor: pointer; transition: background .12s, color .12s; }
+  .ddm button span { flex: 1; }
+  .ddm button svg { width: 15px; height: 15px; flex: none; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+  .ddm button.hi { background: rgba(124,92,255,.1); color: var(--ink, #15163a); }
+  .ddm button.on { color: var(--acc, #6d5dfc); }
+  .ddm button.on svg { opacity: 1; }
+  .ddm button:disabled { opacity: .4; cursor: default; }
+</style>
+<script id="dd-js">
+/* ---------- Brand dropdowns: every <select> gets the glass menu, automatically ---------- */
+(() => {
+  const CHEV = '<svg class="dd-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+  const TICK = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+  const escH = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let open = null; // { sel, btn, menu, hi }
+
+  function label(sel, btn) {
+    const o = sel.options[sel.selectedIndex];
+    btn.querySelector(".dd-t").textContent = o ? o.text : "";
+    // A filter that isn't on its first ("all") choice is highlighted, so you can see it's active.
+    btn.classList.toggle("act", sel.classList.contains("sel") && sel.selectedIndex > 0);
+    btn.disabled = sel.disabled;
+  }
+  function enhance(sel) {
+    if (sel.dataset.dd || sel.multiple) return;
+    sel.dataset.dd = "1";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = sel.className + " dd";
+    if (sel.id) btn.id = sel.id + "-dd";
+    btn.setAttribute("aria-haspopup", "listbox");
+    btn.innerHTML = '<span class="dd-t"></span>' + CHEV;
+    if (sel.getAttribute("style")) btn.setAttribute("style", sel.getAttribute("style"));
+    sel.style.display = "none";
+    sel.after(btn);
+    sel._dd = btn;
+    label(sel, btn);
+    btn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); open && open.sel === sel ? close() : show(sel, btn); });
+    btn.addEventListener("keydown", (e) => { if (!open && (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(sel, btn); } });
+    new MutationObserver(() => label(sel, btn)).observe(sel, { childList: true, subtree: true, attributes: true });
+  }
+  function show(sel, btn) {
+    close();
+    const menu = document.createElement("div");
+    menu.className = "ddm"; menu.setAttribute("role", "listbox");
+    menu.innerHTML = [...sel.options].map((o, i) => '<button type="button" role="option" data-i="' + i + '" class="' + (i === sel.selectedIndex ? "on hi" : "") + '"' + (o.disabled ? " disabled" : "") + "><span>" + escH(o.text) + "</span>" + TICK + "</button>").join("");
+    document.body.appendChild(menu);
+    menu.addEventListener("mousedown", (e) => e.preventDefault());
+    menu.addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (b && !b.disabled) pick(+b.dataset.i); });
+    menu.addEventListener("mousemove", (e) => { const b = e.target.closest("button[data-i]"); if (b) hilite(+b.dataset.i, false); });
+    open = { sel, btn, menu, hi: Math.max(0, sel.selectedIndex) };
+    btn.classList.add("open"); btn.setAttribute("aria-expanded", "true");
+    place();
+    menu.querySelector(".on")?.scrollIntoView({ block: "nearest" });
+  }
+  function place() {
+    if (!open) return;
+    const r = open.btn.getBoundingClientRect(), m = open.menu;
+    m.style.minWidth = Math.max(180, r.width) + "px";
+    const h = m.offsetHeight, w = m.offsetWidth, below = innerHeight - r.bottom;
+    const up = below < h + 16 && r.top > below;
+    m.classList.toggle("up", up);
+    m.style.top = (up ? r.top - h - 8 : r.bottom + 8) + "px";
+    m.style.left = Math.max(10, Math.min(r.left, innerWidth - w - 10)) + "px";
+  }
+  function hilite(i, scroll = true) {
+    if (!open) return;
+    open.hi = i;
+    open.menu.querySelectorAll("button").forEach((b) => b.classList.toggle("hi", +b.dataset.i === i));
+    if (scroll) open.menu.querySelector('[data-i="' + i + '"]')?.scrollIntoView({ block: "nearest" });
+  }
+  function pick(i) {
+    const { sel, btn } = open;
+    close(); btn.focus();
+    if (sel.selectedIndex === i) return;
+    sel.selectedIndex = i;
+    label(sel, btn);
+    sel.dispatchEvent(new Event("input", { bubbles: true }));
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function close() {
+    if (!open) return;
+    open.menu.remove(); open.btn.classList.remove("open"); open.btn.setAttribute("aria-expanded", "false");
+    open = null;
+  }
+  window.closeDropdown = close;
+  window.dropdownOpen = () => !!open;
+
+  addEventListener("mousedown", (e) => { if (open && !e.target.closest(".ddm") && !e.target.closest(".dd.open")) close(); });
+  addEventListener("resize", place);
+  addEventListener("scroll", (e) => { if (open && !open.menu.contains(e.target)) place(); }, true);
+  // Keyboard: arrows move, Enter picks, Esc closes (before any panel or pop-up behind it).
+  addEventListener("keydown", (e) => {
+    if (!open) return;
+    const n = open.sel.options.length;
+    if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); const b = open.btn; close(); b.focus(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); hilite(Math.min(n - 1, open.hi + 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); hilite(Math.max(0, open.hi - 1)); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(open.hi); }
+    else if (e.key === "Tab") close();
+  }, true);
+
+  // Selects added later (training page, pop-ups, filters filled from data) are picked up too.
+  const scan = (root) => (root.querySelectorAll ? root.querySelectorAll("select") : []).forEach(enhance);
+  const start = () => { scan(document); new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => { if (n.nodeType !== 1) return; if (n.tagName === "SELECT") enhance(n); else scan(n); }))).observe(document.body, { childList: true, subtree: true }); };
+  document.readyState === "loading" ? addEventListener("DOMContentLoaded", start) : start();
+  // Code that sets a value directly (sel.value = …) doesn't fire events; keep the labels in step.
+  setInterval(() => document.querySelectorAll("select[data-dd]").forEach((s) => s._dd && label(s, s._dd)), 600);
+})();
+</script>
+</body>
+</html>

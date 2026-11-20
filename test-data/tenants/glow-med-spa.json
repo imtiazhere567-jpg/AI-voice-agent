@@ -1,0 +1,56 @@
+{
+  "tenantId": "glow-med-spa",
+  "businessName": "Glow Med Spa",
+  "industry": "med spa",
+  "timezone": "America/New_York",
+  "testMode": true,
+  "hours": {
+    "tue": [{ "open": "10:00", "close": "19:00" }],
+    "wed": [{ "open": "10:00", "close": "19:00" }],
+    "thu": [{ "open": "10:00", "close": "19:00" }],
+    "fri": [{ "open": "10:00", "close": "19:00" }],
+    "sat": [{ "open": "09:00", "close": "15:00" }]
+  },
+  "serviceArea": { "zipCodes": ["33101", "33109", "33125", "33130", "33131", "33139"] },
+  "services": [
+    { "id": "consult", "name": "Free consultation", "appointmentMinutes": 30 },
+    { "id": "botox", "name": "Botox", "appointmentMinutes": 30 },
+    { "id": "filler", "name": "Dermal filler", "appointmentMinutes": 45 },
+    { "id": "facial", "name": "HydraFacial", "appointmentMinutes": 60 }
+  ],
+  "emergency": {
+    "keywords": ["allergic reaction", "can't breathe", "cannot breathe", "swelling", "severe pain", "vision"],
+    "action": "redirect",
+    "redirectMessage": "If this is a medical emergency, please hang up and call 911 now. I'm also alerting our medical director right away.",
+    "onCallNumbers": ["+13055550111"]
+  },
+  "qualifyingQuestions": [
+    { "field": "new_client", "question": "Have you visited us before?", "required": true },
+    { "field": "treatment", "question": "Which treatment are you interested in?", "required": true },
+    { "field": "zip_code", "question": "What ZIP code are you in?", "required": false }
+  ],
+  "knowledgeBase": [
+    { "topic": "consultation", "answer": "Consultations are free and take about 30 minutes." },
+    { "topic": "parking", "answer": "Free parking is available behind the building." },
+    { "topic": "cancellation", "answer": "We ask for 24 hours notice to cancel or reschedule." }
+  ],
+  "approvedPrices": [
+    { "item": "Botox", "price": "$12 per unit" },
+    { "item": "HydraFacial", "price": "$199" }
+  ],
+  "booking": { "calendarProvider": "calendly", "bufferMinutes": 10, "maxPerDay": 16, "minLeadHours": 4 },
+  "escalationContacts": [
+    { "name": "Front desk", "channel": "email", "to": "frontdesk@glowmedspa.example.com" },
+    { "name": "Medical director", "channel": "sms", "to": "+13055550111" }
+  ],
+  "voice": {
+    "greeting": "Thank you for calling Glow Med Spa. I'm the automated assistant.",
+    "language": "en",
+    "maxCallMinutes": 8
+  },
+  "recording": { "enabled": true, "notice": "This call may be recorded.", "retentionDays": 90 },
+  "textBack": {
+    "enabled": true,
+    "message": "Hi! Sorry we missed your call at {businessName}. Book online: {bookingLink} or reply here and we'll help."
+  }
+}

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Book an appointment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg:#f5f6fa; --card:#fff; --ink:#111827; --ink2:#4b5563; --muted:#9ca3af; --line:#e5e7eb; --brand:#4f46e5; --brand-soft:#eef2ff; --green:#059669; --red:#dc2626; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif; background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased; }
+  button, input, textarea { font:inherit; }
+  svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .page { max-width:960px; margin:0 auto; padding:40px 20px; }
+  @media (max-width:640px){ .page { padding:16px 12px; } }
+  .shell { display:grid; grid-template-columns:300px 1fr; background:var(--card); border:1px solid var(--line); border-radius:20px; box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 40px -12px rgba(17,24,39,.12); overflow:hidden; min-height:560px; }
+  @media (max-width:800px){ .shell { grid-template-columns:1fr; } }
+
+  .side { padding:28px; border-right:1px solid var(--line); background:linear-gradient(180deg,#fafbff,#fff); }
+  @media (max-width:800px){ .side { border-right:0; border-bottom:1px solid var(--line); padding:20px; } }
+  .logo { width:52px; height:52px; border-radius:14px; display:grid; place-items:center; color:#fff; font-weight:700; font-size:22px; background:linear-gradient(135deg,#4f46e5,#7c3aed); box-shadow:0 8px 20px -8px #4f46e5; }
+  .side h1 { font-size:20px; margin:16px 0 4px; letter-spacing:-.01em; }
+  .side .ind { color:var(--muted); font-size:14px; text-transform:capitalize; }
+  .summary { margin-top:24px; display:grid; gap:12px; }
+  .sum { display:flex; gap:10px; align-items:flex-start; color:var(--ink2); font-size:14px; }
+  .sum svg { color:var(--muted); margin-top:2px; }
+  .sum b { color:var(--ink); font-weight:600; display:block; }
+  .note { margin-top:24px; padding:12px 14px; border-radius:12px; background:var(--brand-soft); color:#3730a3; font-size:13px; }
+
+  .main { padding:28px 32px; }
+  @media (max-width:640px){ .main { padding:20px; } }
+  .steps { display:flex; gap:8px; margin-bottom:22px; }
+  .steps span { height:4px; flex:1; border-radius:4px; background:var(--line); transition:background .3s; }
+  .steps span.on { background:var(--brand); }
+  h2 { font-size:19px; margin:0 0 4px; letter-spacing:-.01em; }
+  .sub { color:var(--muted); margin:0 0 20px; font-size:14px; }
+  .back { display:inline-flex; align-items:center; gap:6px; color:var(--ink2); background:none; border:0; padding:0; margin-bottom:14px; cursor:pointer; font-size:14px; }
+  .back:hover { color:var(--brand); }
+
+  .services { display:grid; gap:10px; }
+  .svc { display:flex; align-items:center; gap:14px; padding:16px; border:1px solid var(--line); border-radius:14px; background:#fff; cursor:pointer; text-align:left; transition:all .15s; }
+  .svc:hover { border-color:var(--brand); box-shadow:0 0 0 4px var(--brand-soft); }
+  .svc .ic { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; background:var(--brand-soft); color:var(--brand); }
+  .svc b { display:block; font-weight:600; }
+  .svc small { color:var(--muted); }
+  .svc .arrow { margin-left:auto; color:var(--muted); }
+  .price { margin-left:auto; font-size:13px; color:var(--green); font-weight:600; white-space:nowrap; }
+
+  .days { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px; scrollbar-width:thin; }
+  .day { flex:none; width:70px; padding:10px 0; border-radius:14px; border:1px solid var(--line); background:#fff; cursor:pointer; text-align:center; transition:all .15s; }
+  .day small { display:block; color:var(--muted); font-size:12px; font-weight:500; text-transform:uppercase; }
+  .day b { font-size:20px; font-weight:600; }
+  .day:hover { border-color:var(--brand); }
+  .day.on { background:var(--brand); border-color:var(--brand); color:#fff; box-shadow:0 8px 20px -8px var(--brand); }
+  .day.on small { color:rgba(255,255,255,.75); }
+  .times { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+  .time { padding:12px 0; border-radius:12px; border:1px solid #c7d2fe; color:var(--brand); background:#fff; font-weight:600; cursor:pointer; transition:all .15s; }
+  .time:hover { background:var(--brand-soft); }
+  .time.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+
+  form { display:grid; gap:14px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .two { grid-template-columns:1fr; } }
+  label { display:grid; gap:6px; align-content:start; font-size:13.5px; font-weight:500; color:var(--ink2); }
+  label .opt { color:var(--muted); font-weight:400; font-size:inherit; }
+  input, textarea { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); outline:none; transition:border .15s, box-shadow .15s; }
+  input:focus, textarea:focus { border-color:var(--brand); box-shadow:0 0 0 4px var(--brand-soft); }
+  /* Phone with country code */
+  .tel { position:relative; display:flex; align-items:stretch; border:1px solid var(--line); border-radius:12px; background:#fff; transition:border .15s, box-shadow .15s; }
+  .tel:focus-within, .tel.open { border-color:var(--brand); box-shadow:0 0 0 4px var(--brand-soft); }
+  .tel input { border:0; box-shadow:none !important; border-radius:0 12px 12px 0; padding-left:12px; min-width:0; }
+  .cc { display:flex; align-items:center; gap:7px; padding:0 10px 0 12px; border:0; border-right:1px solid var(--line); border-radius:12px 0 0 12px; background:#fafbff; color:var(--ink); font-weight:600; font-size:14px; cursor:pointer; white-space:nowrap; transition:background .15s; }
+  .cc:hover, .tel.open .cc { background:var(--brand-soft); }
+  .cc svg { width:14px; height:14px; color:var(--muted); transition:transform .2s; }
+  .tel.open .cc svg { transform:rotate(180deg); color:var(--brand); }
+  .flag { width:22px; height:16px; border-radius:3px; object-fit:cover; box-shadow:0 0 0 1px rgba(0,0,0,.08); flex:none; background:#eef0f5; }
+  .ccm { position:absolute; z-index:20; top:calc(100% + 8px); left:0; right:0; min-width:250px; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 24px 50px -16px rgba(17,24,39,.28); overflow:hidden; animation:ccin .18s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes ccin { from { opacity:0; transform:translateY(-6px) scale(.98); } }
+  .ccs { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--line); color:var(--muted); }
+  .ccs input { border:0; padding:4px 0; box-shadow:none !important; font-size:14px; }
+  .ccl { max-height:260px; overflow-y:auto; padding:6px; scrollbar-width:thin; }
+  .ccl button { display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; border:0; border-radius:10px; background:none; text-align:left; font-size:14px; color:var(--ink); cursor:pointer; }
+  .ccl button span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ccl button em { font-style:normal; color:var(--muted); font-weight:600; font-size:13px; }
+  .ccl button.hi { background:var(--brand-soft); }
+  .ccl button.on { color:var(--brand); font-weight:600; }
+  .ccl button.on em { color:var(--brand); }
+  .ccl .none { padding:16px; text-align:center; color:var(--muted); font-size:13.5px; }
+  .ccl .sep { height:1px; background:var(--line); margin:6px 4px; }
+  textarea { resize:vertical; min-height:80px; }
+  .hp { position:absolute; left:-9999px; }
+  .cta { width:100%; padding:14px; border:0; border-radius:12px; background:var(--brand); color:#fff; font-weight:600; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 10px 24px -10px var(--brand); transition:transform .1s, opacity .15s; }
+  .cta:hover { opacity:.93; } .cta:active { transform:scale(.99); } .cta:disabled { opacity:.6; cursor:wait; }
+  .err { padding:12px 14px; border-radius:12px; background:#fef2f2; color:var(--red); font-size:14px; display:none; }
+  .fine { color:var(--muted); font-size:12.5px; text-align:center; }
+
+  .done { text-align:center; padding:40px 10px; }
+  .done .check { width:72px; height:72px; margin:0 auto 18px; border-radius:50%; display:grid; place-items:center; background:#d1fae5; color:var(--green); animation:pop .4s cubic-bezier(.2,.9,.3,1.4); }
+  .done .check svg { width:34px; height:34px; stroke-width:2.5; }
+  @keyframes pop { from { transform:scale(.6); opacity:0; } }
+  .done h2 { font-size:24px; }
+  .ticket { margin:22px auto 0; max-width:380px; text-align:left; border:1px solid var(--line); border-radius:14px; padding:16px 18px; display:grid; gap:10px; }
+  .empty { padding:30px; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:14px; }
+  .loading { color:var(--muted); padding:20px 0; }
+  footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:18px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<svg style="display:none">
+  <symbol id="down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="srch" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="tool" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L22 14l-8 8-2.3-2.3a4 4 0 0 0-5-5L2 10l8-8z"/></symbol>
+  <symbol id="right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+</svg>
+
+<div class="page">
+  <div class="shell">
+    <aside class="side">
+      <div class="logo" id="logo"></div>
+      <h1 id="biz">&nbsp;</h1>
+      <div class="ind" id="ind"></div>
+      <div class="summary">
+        <div class="sum" id="s-svc" hidden><svg><use href="#tool"/></svg><span><b id="s-svc-t"></b><span id="s-svc-m"></span></span></div>
+        <div class="sum" id="s-when" hidden><svg><use href="#cal"/></svg><span><b id="s-when-t"></b><span id="s-when-d"></span></span></div>
+        <div class="sum"><svg><use href="#globe"/></svg><span id="tz"></span></div>
+      </div>
+      <div class="note">Free to book. You'll get a text confirmation right away.</div>
+    </aside>
+
+    <main class="main">
+      <div class="steps"><span id="p1" class="on"></span><span id="p2"></span><span id="p3"></span></div>
+
+      <section id="step1">
+        <h2>What do you need?</h2>
+        <p class="sub">Choose a service to see open times.</p>
+        <div class="services" id="services"><div class="loading">Loading…</div></div>
+      </section>
+
+      <section id="step2" hidden>
+        <button class="back" onclick="go(1)"><svg><use href="#left"/></svg>Back</button>
+        <h2>Pick a date and time</h2>
+        <p class="sub" id="tzline"></p>
+        <div class="days" id="days"></div>
+        <div class="times" id="times"></div>
+      </section>
+
+      <section id="step3" hidden>
+        <button class="back" onclick="go(2)"><svg><use href="#left"/></svg>Back</button>
+        <h2>Your details</h2>
+        <p class="sub">We'll text your confirmation to this number.</p>
+        <form id="form" onsubmit="submitBooking(event)">
+          <div class="two">
+            <label>Full name<input name="name" required autocomplete="name" placeholder="Jane Smith" /></label>
+            <label>Phone<div class="tel" id="tel"><button type="button" class="cc" id="cc" onclick="toggleCC()" aria-haspopup="listbox" aria-label="Country code"><img class="flag" id="ccflag" alt="" /><b id="ccdial">+1</b><svg><use href="#down"/></svg></button><input name="phone" id="phone" required type="tel" autocomplete="tel-national" placeholder="(713) 555-0199" /></div></label>
+          </div>
+          <div class="two">
+            <label>ZIP code<input name="zip" required inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="77002" /></label>
+            <label><span>Address <small class="opt">(optional)</small></span><input name="address" autocomplete="street-address" placeholder="123 Main St" /></label>
+          </div>
+          <label><span>Anything we should know? <small class="opt">(optional)</small></span><textarea name="notes" maxlength="500" placeholder="Briefly describe what you need"></textarea></label>
+          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <div class="err" id="err"></div>
+          <button class="cta" id="cta" type="submit"><svg><use href="#check"/></svg>Confirm booking</button>
+          <div class="fine">By booking you agree to receive texts about this appointment. Reply STOP to opt out.</div>
+        </form>
+      </section>
+
+      <section id="step4" hidden>
+        <div class="done">
+          <div class="check"><svg><use href="#check"/></svg></div>
+          <h2>You're booked!</h2>
+          <p class="sub" style="margin:0">A confirmation text is on its way.</p>
+          <div class="ticket" id="ticket"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <footer>Online booking · <span id="foot"></span></footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const tenantId = location.pathname.split("/").filter(Boolean).pop();
+let biz, service, slots = [], day, slot;
+
+const fmt = (iso, o) => new Date(iso).toLocaleString("en-US", { timeZone: biz.timezone, ...o });
+const dayKey = (iso) => fmt(iso, { year: "numeric", month: "2-digit", day: "2-digit" });
+
+async function load() {
+  const r = await fetch(`/public/${tenantId}`);
+  if (!r.ok) { document.body.innerHTML = "<p style='padding:40px;text-align:center'>This booking page doesn't exist.</p>"; return; }
+  biz = await r.json();
+  document.title = `Book with ${biz.businessName}`;
+  $("logo").textContent = biz.businessName[0];
+  $("biz").textContent = biz.businessName;
+  $("ind").textContent = biz.industry;
+  $("foot").textContent = biz.businessName;
+  const tzName = biz.timezone.split("/").pop().replace("_", " ");
+  $("tz").textContent = `Times shown in ${tzName} time`;
+  $("tzline").textContent = `All times are ${tzName} time.`;
+  const price = (name) => biz.approvedPrices.find((p) => p.item.toLowerCase() === name.toLowerCase())?.price;
+  $("services").innerHTML = biz.services.map((s) => `
+    <button class="svc" onclick="pickService('${s.id}')">
+      <span class="ic"><svg><use href="#tool"/></svg></span>
+      <span><b>${esc(s.name)}</b><small><svg style="width:13px;height:13px;vertical-align:-2px"><use href="#clock"/></svg> ${s.minutes} min</small></span>
+      ${price(s.name) ? `<span class="price">${esc(price(s.name))}</span>` : `<svg class="arrow"><use href="#right"/></svg>`}
+    </button>`).join("");
+}
+
+function go(n) {
+  [1,2,3,4].forEach((i) => $("step" + i).hidden = i !== n);
+  [1,2,3].forEach((i) => $("p" + i).classList.toggle("on", i <= n));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function pickService(id) {
+  service = biz.services.find((s) => s.id === id);
+  $("s-svc").hidden = false; $("s-svc-t").textContent = service.name; $("s-svc-m").textContent = `${service.minutes} minutes`;
+  $("s-when").hidden = true; slot = null;
+  go(2);
+  $("days").innerHTML = ""; $("times").innerHTML = `<div class="loading">Finding open times…</div>`;
+  const r = await fetch(`/public/${tenantId}/slots?service=${encodeURIComponent(id)}`);
+  const data = await r.json();
+  slots = data.slots ?? [];
+  if (!slots.length) { $("times").innerHTML = `<div class="empty">No open times in the next two weeks. Please call us.</div>`; return; }
+  const days = [...new Map(slots.map((s) => [dayKey(s.start), s.start])).values()];
+  $("days").innerHTML = days.map((iso) => `<button class="day" data-k="${dayKey(iso)}" onclick="pickDay('${dayKey(iso)}')"><small>${fmt(iso, { weekday: "short" })}</small><b>${fmt(iso, { day: "numeric" })}</b><small>${fmt(iso, { month: "short" })}</small></button>`).join("");
+  pickDay(dayKey(days[0]));
+}
+
+function pickDay(k) {
+  day = k;
+  document.querySelectorAll(".day").forEach((d) => d.classList.toggle("on", d.dataset.k === k));
+  $("times").innerHTML = slots.filter((s) => dayKey(s.start) === k).map((s) => `<button class="time" onclick="pickTime('${s.start}')">${fmt(s.start, { hour: "numeric", minute: "2-digit" })}</button>`).join("");
+}
+
+function pickTime(start) {
+  slot = start;
+  $("s-when").hidden = false;
+  $("s-when-t").textContent = fmt(start, { weekday: "long", month: "long", day: "numeric" });
+  $("s-when-d").textContent = fmt(start, { hour: "numeric", minute: "2-digit" });
+  $("err").style.display = "none";
+  go(3);
+  $("form").name.focus();
+}
+
+async function submitBooking(e) {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData($("form")));
+  const num = fullPhone();
+  if (!num) { $("err").textContent = "Please enter a valid phone number."; $("err").style.display = "block"; $("phone").focus(); return; }
+  f.phone = num;
+  $("cta").disabled = true; $("cta").lastChild.textContent = "Booking…";
+  try {
+    const r = await fetch(`/public/${tenantId}/book`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...f, service: service.id, start: slot }) });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.message || "Something went wrong.");
+    $("ticket").innerHTML = `
+      <div class="sum"><svg><use href="#tool"/></svg><span><b>${esc(data.serviceName)}</b>${esc(biz.businessName)}</span></div>
+      <div class="sum"><svg><use href="#cal"/></svg><span><b>${esc(data.when)}</b>${esc($("tz").textContent)}</span></div>`;
+    go(4);
+  } catch (err) {
+    $("err").textContent = err.message; $("err").style.display = "block";
+    if (/taken/i.test(err.message)) setTimeout(() => pickService(service.id), 1500);
+  } finally {
+    $("cta").disabled = false; $("cta").lastChild.textContent = "Confirm booking";
+  }
+}
+
+/* ---------- Country code for the phone number ---------- */
+const COUNTRIES = [
+  ["us","United States",1],["ca","Canada",1],["gb","United Kingdom",44],["au","Australia",61],["pk","Pakistan",92],["in","India",91],["ae","United Arab Emirates",971],["sa","Saudi Arabia",966],
+  ["af","Afghanistan",93],["ar","Argentina",54],["at","Austria",43],["bh","Bahrain",973],["bd","Bangladesh",880],["be","Belgium",32],["br","Brazil",55],["cl","Chile",56],["cn","China",86],["co","Colombia",57],
+  ["cz","Czechia",420],["dk","Denmark",45],["eg","Egypt",20],["fi","Finland",358],["fr","France",33],["de","Germany",49],["gh","Ghana",233],["gr","Greece",30],["hk","Hong Kong",852],["hu","Hungary",36],
+  ["id","Indonesia",62],["iq","Iraq",964],["ie","Ireland",353],["il","Israel",972],["it","Italy",39],["jm","Jamaica",1876],["jp","Japan",81],["jo","Jordan",962],["ke","Kenya",254],["kw","Kuwait",965],
+  ["lb","Lebanon",961],["my","Malaysia",60],["mx","Mexico",52],["ma","Morocco",212],["np","Nepal",977],["nl","Netherlands",31],["nz","New Zealand",64],["ng","Nigeria",234],["no","Norway",47],["om","Oman",968],
+  ["pe","Peru",51],["ph","Philippines",63],["pl","Poland",48],["pt","Portugal",351],["pr","Puerto Rico",1787],["qa","Qatar",974],["ro","Romania",40],["ru","Russia",7],["sg","Singapore",65],["za","South Africa",27],
+  ["kr","South Korea",82],["es","Spain",34],["lk","Sri Lanka",94],["se","Sweden",46],["ch","Switzerland",41],["tw","Taiwan",886],["th","Thailand",66],["tr","Türkiye",90],["ua","Ukraine",380],["vn","Vietnam",84],
+];
+const POPULAR = 8; // first ones are shown on top
+let ccSel = COUNTRIES[0], ccHi = 0, ccList = [];
+const flagUrl = (c) => "https://flagcdn.com/w40/" + c + ".png";
+function setCC(c) {
+  ccSel = c;
+  $("ccflag").src = flagUrl(c[0]); $("ccflag").alt = c[1];
+  $("ccdial").textContent = "+" + c[2];
+  $("phone").placeholder = c[2] === 1 ? "(713) 555-0199" : "Phone number";
+  try { localStorage.setItem("cc", c[0]); } catch {}
+}
+// Full number in international form, e.g. +923001234567. A pasted "+…" number is kept as typed.
+function fullPhone() {
+  const raw = $("phone").value.trim(), d = raw.replace(/\D/g, "");
+  if (raw.startsWith("+")) return d.length >= 8 && d.length <= 15 ? "+" + d : null;
+  let n = d.replace(/^0+/, ""); // drop the local trunk 0 (e.g. 0300… in Pakistan)
+  if (ccSel[2] === 1 && n.length === 11 && n.startsWith("1")) n = n.slice(1);
+  if (ccSel[2] === 1 && n.length !== 10) return null;
+  return n.length >= 6 && n.length <= 14 ? "+" + ccSel[2] + n : null;
+}
+function toggleCC() { $("ccm") ? closeCC() : openCC(); }
+function openCC() {
+  const m = document.createElement("div");
+  m.className = "ccm"; m.id = "ccm";
+  m.innerHTML = '<div class="ccs"><svg><use href="#srch"/></svg><input id="ccq" placeholder="Search country or code" autocomplete="off" /></div><div class="ccl" id="ccl" role="listbox"></div>';
+  $("tel").appendChild(m); $("tel").classList.add("open");
+  $("ccq").addEventListener("input", renderCC);
+  $("ccq").addEventListener("keydown", ccKeys);
+  renderCC();
+  $("ccq").focus();
+  setTimeout(() => document.addEventListener("mousedown", ccOutside), 0);
+}
+function closeCC() { $("ccm")?.remove(); $("tel").classList.remove("open"); document.removeEventListener("mousedown", ccOutside); }
+function ccOutside(e) { if (!e.target.closest("#tel")) closeCC(); }
+function renderCC() {
+  const q = $("ccq").value.trim().toLowerCase().replace(/^\+/, "");
+  ccList = q ? COUNTRIES.filter((c) => c[1].toLowerCase().includes(q) || String(c[2]).startsWith(q) || c[0] === q) : COUNTRIES;
+  ccHi = Math.max(0, ccList.indexOf(ccSel));
+  const row = (c, i) => '<button type="button" role="option" data-i="' + i + '" class="' + (c === ccSel ? "on " : "") + (i === ccHi ? "hi" : "") + '"><img class="flag" src="' + flagUrl(c[0]) + '" alt="" /><span>' + esc(c[1]) + "</span><em>+" + c[2] + "</em></button>";
+  $("ccl").innerHTML = ccList.length ? ccList.map((c, i) => (!q && i === POPULAR ? '<div class="sep"></div>' : "") + row(c, i)).join("") : '<div class="none">No country found</div>';
+  $("ccl").querySelectorAll("button").forEach((b) => { b.onclick = () => pickCC(+b.dataset.i); b.onmousemove = () => hiCC(+b.dataset.i, false); });
+  $("ccl").querySelector(".hi")?.scrollIntoView({ block: "nearest" });
+}
+function hiCC(i, scroll = true) { ccHi = i; $("ccl").querySelectorAll("button").forEach((b) => b.classList.toggle("hi", +b.dataset.i === i)); if (scroll) $("ccl").querySelector(".hi")?.scrollIntoView({ block: "nearest" }); }
+function pickCC(i) { if (ccList[i]) setCC(ccList[i]); closeCC(); $("phone").focus(); }
+function ccKeys(e) {
+  if (e.key === "ArrowDown") { e.preventDefault(); hiCC(Math.min(ccList.length - 1, ccHi + 1)); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); hiCC(Math.max(0, ccHi - 1)); }
+  else if (e.key === "Enter") { e.preventDefault(); pickCC(ccHi); }
+  else if (e.key === "Escape") { e.preventDefault(); closeCC(); $("cc").focus(); }
+}
+// Start with the visitor's last choice, else their browser's country, else the US.
+(() => {
+  let code = null; try { code = localStorage.getItem("cc"); } catch {}
+  code ||= (navigator.language.split("-")[1] || "").toLowerCase();
+  setCC(COUNTRIES.find((c) => c[0] === code) || COUNTRIES[0]);
+})();
+
+load();
+</script>
+</body>
+</html>
