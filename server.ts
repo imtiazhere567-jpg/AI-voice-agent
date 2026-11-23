@@ -8,7 +8,7 @@ import { connectPostgres } from "./core/db/postgres.js";
 import { LiveSync } from "./core/db/live-sync.js";
 import { LocalCalendar } from "./integrations/calendar/local-calendar.js";
 import { BlandClient } from "./integrations/voice/bland.js";
-import { buildApp } from "./app.js";
+import { buildApp } from "./http-app.js";
 import { QuickTunnel } from "./integrations/tunnel.js";
 import { Auth } from "./core/auth/index.js";
 import { appendFileSync } from "node:fs";

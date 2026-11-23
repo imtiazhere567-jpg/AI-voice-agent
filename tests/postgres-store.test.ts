@@ -7,7 +7,7 @@ import { createTables, RecordSync, type Sql } from "../core/db/postgres.js";
 import { Store } from "../core/store/index.js";
 import { EventLog } from "../core/events/index.js";
 import { loadTenantsFromDb } from "../core/tenant-config/loader.js";
-import { buildApp } from "../app.js";
+import { buildApp } from "../http-app.js";
 
 async function freshDb(): Promise<Sql> {
   const db = new PGlite();

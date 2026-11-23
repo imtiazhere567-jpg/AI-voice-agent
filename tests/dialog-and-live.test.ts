@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app.js";
+import { buildApp } from "../http-app.js";
 import { EventLog } from "../core/events/index.js";
 import { Messaging } from "../core/messaging/index.js";
 import { Store } from "../core/store/index.js";

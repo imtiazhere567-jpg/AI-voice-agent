@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../app.js";
+import { buildApp } from "../http-app.js";
 import { EventLog, redact } from "../core/events/index.js";
 import { Messaging, type SmsProvider } from "../core/messaging/index.js";
 import { Store } from "../core/store/index.js";
