@@ -28,5 +28,8 @@ try {
   );
 }
 
-await app.listen({ port, host: "0.0.0.0" });
-if (message) app.log.info(message);
+// Don't wait for listen(): on Vercel the platform takes over the server and listen() never "finishes".
+app.listen({ port, host: "0.0.0.0" }).then(
+  () => { if (message) app.log.info(message); },
+  (err) => { console.error("Could not start the server:", err.message); process.exit(1); },
+);
