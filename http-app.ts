@@ -28,7 +28,7 @@ type Body = Record<string, unknown>;
 type Req = FastifyRequest<{ Params: { tenantId: string }; Body: Body; Querystring: { token?: string } }>;
 
 /** Builds the HTTP server. Kept separate from startup so tests can call it directly. */
-export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>; toolSecret: string; logger?: boolean; tenantsDir?: string; tenantDb?: Sql; liveSync?: { beforeRequest(): Promise<void>; afterRequest(): Promise<void> }; requireAuth?: boolean; bland?: BlandClient; tunnel?: QuickTunnel }) {
+export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>; toolSecret: string; logger?: boolean; tenantsDir?: string; tenantDb?: Sql; liveSync?: { beforeRequest(): Promise<void>; afterRequest(): Promise<void> }; publicDashboard?: boolean; requireAuth?: boolean; bland?: BlandClient; tunnel?: QuickTunnel }) {
   const { deps, tenants, toolSecret } = opts;
   const requireAuth = opts.requireAuth !== false;
   const auth = new Auth(deps.store, deps.now);
@@ -252,7 +252,9 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
     return actions.handleInboundSms(deps, tenant, { from: b.from ?? b.user_number, body: b.body ?? b.message });
   });
 
-  // ---------- Local dashboard (only from this computer, never through ngrok/internet) ----------
+  // ---------- Dashboard access ----------
+  // On a computer: only from that computer (the free tunnel for Bland test calls must not expose it).
+  // When hosted (Vercel): open on the internet, protected by the login.
 
   function isLocal(req: FastifyRequest): boolean {
     const forwarded = req.headers["x-forwarded-for"] || req.headers["x-forwarded-host"];
@@ -262,6 +264,7 @@ export function buildApp(opts: { deps: Deps; tenants: Map<string, TenantConfig>;
   const AUTH_PAGES = ["/login", "/register", "/forgot", "/reset", "/admin"];
   app.addHook("onRequest", async (req, reply) => {
     const path = req.url.split("?")[0];
+    if (opts.publicDashboard) return;
     if ((path === "/" || path === "/phone" || AUTH_PAGES.includes(path) || path.startsWith("/api/")) && !isLocal(req)) {
       return reply.code(403).send({ ok: false, message: "Dashboard is only available on the local computer." });
     }

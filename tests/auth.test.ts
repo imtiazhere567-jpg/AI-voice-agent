@@ -135,3 +135,21 @@ describe("forgot / reset password", () => {
     expect(f.testLink).toBeUndefined();
   });
 });
+
+describe("Dashboard access when hosted", () => {
+  it("is local-only on a computer, and open (behind the login) when hosted", async () => {
+    const { buildApp } = await import("../http-app.js");
+    const { Store } = await import("../core/store/index.js");
+    const { EventLog } = await import("../core/events/index.js");
+    const { loadTenantsFromDir } = await import("../core/tenant-config/loader.js");
+    const mk = (publicDashboard: boolean) => buildApp({
+      deps: { store: new Store(), events: new EventLog(), messaging: {} as any, calendar: {} as any, now: () => new Date(), publicBaseUrl: "http://x" },
+      tenants: loadTenantsFromDir("test-data/tenants"), toolSecret: "test-secret-1234567890", logger: false, publicDashboard,
+    });
+    const fromInternet = { url: "/login", headers: { "x-forwarded-for": "203.0.113.9" } };
+    expect((await mk(false).inject(fromInternet)).statusCode).toBe(403);
+    expect((await mk(true).inject(fromInternet)).statusCode).toBe(200);
+    // Still needs a login for the data.
+    expect((await mk(true).inject({ url: "/api/tenants", headers: { "x-forwarded-for": "203.0.113.9" } })).statusCode).toBe(401);
+  });
+});

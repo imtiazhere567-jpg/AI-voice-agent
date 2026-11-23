@@ -84,6 +84,7 @@ export const app: FastifyInstance = buildApp({
   tenantsDir,
   tenantDb: db,
   liveSync,
+  publicDashboard: onVercel || process.env.PUBLIC_DASHBOARD === "true",
   bland,
   tunnel,
 });
