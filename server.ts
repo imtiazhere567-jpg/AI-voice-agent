@@ -1,5 +1,8 @@
 // Start: npm run dev   (reads .env)
 import { join } from "node:path";
+// Vercel looks for the file that imports fastify to find the app's start file (the routes are built in http-app.ts).
+import type { FastifyInstance } from "fastify";
+import "fastify";
 import { EventLog } from "./core/events/index.js";
 import { Messaging } from "./core/messaging/index.js";
 import { Store } from "./core/store/index.js";
@@ -76,7 +79,7 @@ const publicBaseUrl = process.env.PUBLIC_BASE_URL || (vercelUrl ? `https://${ver
 const liveSync = onVercel && db ? new LiveSync(db, store, events, tenants) : undefined;
 await liveSync?.start();
 
-const app = buildApp({
+const app: FastifyInstance = buildApp({
   deps: { store, events, messaging, calendar, now: () => new Date(), publicBaseUrl },
   tenants,
   toolSecret: process.env.TOOL_SECRET ?? "",
